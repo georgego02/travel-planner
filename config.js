@@ -8,7 +8,7 @@ window.PLANNER_CONFIG = {
   // URL веб-приложения Apps Script (…/exec) — для записи с телефона:
   // расходы, отметки в сборах и подготовке, идеи и голоса.
   // Пусто — сайт работает только на просмотр. Как получить — README, часть 2.
-  SCRIPT_URL: "",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzrM7_KzF09tRLjKdYNhptr37UesX_gXIjQWfdusHj6jM3teQx8wspwndc6Qm4bx5Zc/exec",
 
   // Названия вкладок в таблице
   TABS: {
