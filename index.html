@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Планировщик поездки</title>
+<meta name="theme-color" content="#F2F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1614" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Поездка">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/fira-sans-condensed-cyrillic-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/fira-sans-cyrillic-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* ---------- шрифты (локально, работают офлайн) ---------- */
+  @font-face { font-family: "Fira Sans"; font-weight: 400; font-display: swap; src: url(fonts/fira-sans-cyrillic-400-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+  @font-face { font-family: "Fira Sans"; font-weight: 400; font-display: swap; src: url(fonts/fira-sans-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Fira Sans"; font-weight: 500; font-display: swap; src: url(fonts/fira-sans-cyrillic-500-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+  @font-face { font-family: "Fira Sans"; font-weight: 500; font-display: swap; src: url(fonts/fira-sans-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Fira Sans"; font-weight: 600; font-display: swap; src: url(fonts/fira-sans-cyrillic-600-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+  @font-face { font-family: "Fira Sans"; font-weight: 600; font-display: swap; src: url(fonts/fira-sans-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Fira Sans Condensed"; font-weight: 600; font-display: swap; src: url(fonts/fira-sans-condensed-cyrillic-600-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+  @font-face { font-family: "Fira Sans Condensed"; font-weight: 600; font-display: swap; src: url(fonts/fira-sans-condensed-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Fira Sans Condensed"; font-weight: 700; font-display: swap; src: url(fonts/fira-sans-condensed-cyrillic-700-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+  @font-face { font-family: "Fira Sans Condensed"; font-weight: 700; font-display: swap; src: url(fonts/fira-sans-condensed-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+FEFF,U+FFFD; }
+
+  /* ---------- токены «Зимние Альпы» ---------- */
+  :root {
+    --snow: #F2F5F7; --paper: #FFFFFF; --fir: #173A33; --ink: #12201D; --slate: #55656B; --faint: #7A8A90;
+    --wine: #8C2338; --wine-ink: #FFFFFF; --wine-soft: #F6E6E9; --frost: #D6E0E5; --edge: #7D8E95;
+    --sign-dim: #A9C2BB; --chart: #1F8562; --focus: #8C2338;
+    --ok: #2A6645; --ok-soft: #E2F0E7; --plan: #6E5410; --plan-soft: #F5EED8; --idea: #55528A; --idea-soft: #ECEBF5;
+    --warn: #8A3F14; --warn-soft: #F8EBE2;
+    --cond: "Fira Sans Condensed", "Roboto Condensed", "Arial Narrow", sans-serif;
+    --body: "Fira Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --bar-h: 52px; --nav-h: 62px; --r-sign: 14px; --r: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --snow: #0E1614; --paper: #16211E; --fir: #0F2A25; --ink: #E3EBE8; --slate: #98A8A3; --faint: #7C8B87;
+      --wine: #E58A9A; --wine-ink: #1A0B0F; --wine-soft: #3A1F25; --frost: #25332F; --edge: #6A7C82;
+      --sign-dim: #9DB8B0; --chart: #3AA57E; --focus: #E58A9A;
+      --ok: #86C9A0; --ok-soft: #1C3025; --plan: #D9BD69; --plan-soft: #312A15; --idea: #B2AEE6; --idea-soft: #26253A;
+      --warn: #EBA57B; --warn-soft: #36261C;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body { font-family: var(--body); background: var(--snow); color: var(--ink); font-size: 16px; line-height: 1.5;
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px); -webkit-text-size-adjust: 100%; }
+  body.locked { overflow: hidden; }
+  a { color: var(--wine); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 18px; }
+  svg.i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+
+  /* ---------- верхняя панель ---------- */
+  .appbar { position: sticky; top: 0; z-index: 20; background: var(--snow); padding-top: env(safe-area-inset-top); border-bottom: 1px solid transparent; transition: border-color .2s; }
+  .appbar.scrolled { border-bottom-color: var(--frost); }
+  .appbar .wrap { height: var(--bar-h); display: flex; align-items: center; gap: 2px; }
+  .appbar h1 { flex: 1; margin: 0; font: 700 19px/1.1 var(--cond); color: var(--fir); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (prefers-color-scheme: dark) { .appbar h1 { color: var(--ink); } }
+  .iconbtn { position: relative; width: 44px; height: 44px; border: 0; background: none; border-radius: 12px; display: grid; place-items: center; color: var(--ink); text-decoration: none; }
+  .iconbtn:active { background: var(--frost); }
+  .iconbtn.spin svg { animation: spin .9s linear infinite; }
+  .iconbtn .dot { position: absolute; top: 9px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--wine); box-shadow: 0 0 0 2px var(--snow); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- шапка: статус и табличка-указатель ---------- */
+  .hero { padding: 6px 0 4px; }
+  .status { font: 700 34px/1.05 var(--cond); letter-spacing: -.01em; color: var(--fir); margin: 0; }
+  @media (prefers-color-scheme: dark) { .status { color: var(--ink); } }
+  .dates { color: var(--slate); font-size: 15px; margin-top: 6px; }
+  .people { color: var(--slate); font-size: 15px; }
+  .sign { margin: 16px 0 6px; background: var(--fir); color: #fff; border-radius: var(--r-sign); padding: 5px; }
+  .sign ol { list-style: none; margin: 0; padding: 4px 0; border: 1.5px solid rgba(255,255,255,.85); border-radius: calc(var(--r-sign) - 4px); }
+  .sign li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; padding: 7px 12px 7px 8px; margin: 0 4px; border-radius: 7px; }
+  .sign li + li { margin-top: 2px; }
+  .sign .arr { display: grid; place-items: center; color: var(--sign-dim); }
+  .sign .city { font: 700 22px/1.15 var(--cond); letter-spacing: .005em; }
+  .sign .when { font: 600 16px/1.2 var(--cond); color: var(--sign-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sign li.done .city { color: var(--sign-dim); }
+  .sign li.now { background: var(--wine); color: var(--wine-ink); }
+  .sign li.now .arr, .sign li.now .when { color: inherit; }
+  .sign .ends { display: flex; justify-content: space-between; padding: 6px 12px 3px 42px; font-size: 13px; color: var(--sign-dim); }
+  .note { color: var(--slate); font-size: 14px; margin: 8px 0 0; }
+
+  .banner { margin: 14px 0 0; padding: 11px 13px; border-radius: var(--r); font-size: 14px; background: var(--warn-soft); color: var(--warn); }
+  .banner.info { background: var(--paper); color: var(--ink); border: 1px solid var(--frost); }
+
+  /* ---------- сегодня ---------- */
+  .now { margin: 18px 0 0; border-left: 3px solid var(--wine); padding: 2px 0 2px 14px; }
+  .now .lbl { font-size: 14px; color: var(--slate); }
+  .now .next { font: 700 21px/1.25 var(--cond); margin-top: 2px; }
+  .now .when { color: var(--slate); font-size: 15px; }
+  .now .acts { display: flex; gap: 8px; margin-top: 10px; }
+
+  /* ---------- общие элементы ---------- */
+  section.panel { display: none; padding-top: 6px; }
+  #route-view { scroll-margin-top: calc(var(--bar-h) + 8px); }
+  section.panel.active { display: block; }
+  .seg { display: flex; background: var(--frost); border-radius: 11px; padding: 3px; margin: 18px 0 12px; }
+  .seg button { flex: 1; border: 0; background: none; border-radius: 9px; min-height: 38px; font: 600 15px var(--cond); color: var(--slate); }
+  .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .chip { flex: none; min-height: 40px; border: 1px solid var(--edge); background: var(--paper); border-radius: 999px; padding: 0 14px; font-size: 14px; white-space: nowrap; }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--snow); }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px; min-height: 48px; padding: 0 16px;
+    background: var(--wine); color: var(--wine-ink); font: 600 16px var(--body); text-decoration: none; }
+  .btn.secondary { background: var(--paper); color: var(--ink); border: 1px solid var(--edge); }
+  .btn.danger { background: var(--paper); color: var(--wine); border: 1px solid var(--edge); }
+  .btn.small { min-height: 42px; font-size: 15px; flex: 1; }
+  .btn.ghost { background: none; color: var(--ink); border: 1px dashed var(--edge); }
+  .hint { color: var(--slate); font-size: 14px; margin: 12px 0; }
+  .empty { color: var(--slate); text-align: center; padding: 34px 12px; font-size: 15px; }
+  .badge { display: inline-block; font-size: 12.5px; line-height: 1.5; padding: 1px 8px; border-radius: 6px; background: var(--frost); color: var(--ink); white-space: nowrap; }
+  .badge.st-idea { background: var(--idea-soft); color: var(--idea); }
+  .badge.st-plan { background: var(--plan-soft); color: var(--plan); }
+  .badge.st-booked, .badge.st-paid { background: var(--ok-soft); color: var(--ok); }
+  .badge.wait { background: var(--warn-soft); color: var(--warn); }
+  .badge.plain { background: none; border: 1px solid var(--frost); color: var(--slate); }
+  h2.sec { font: 700 21px var(--cond); margin: 20px 0 10px; }
+  .row-acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 4px; }
+
+  /* ---------- навигация ---------- */
+  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--paper); border-top: 1px solid var(--frost);
+    display: flex; justify-content: center; padding-bottom: env(safe-area-inset-bottom); }
+  nav.tabs button { flex: 1; max-width: 180px; height: var(--nav-h); border: 0; background: none; color: var(--slate);
+    font: 600 12.5px var(--cond); letter-spacing: .01em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+  nav.tabs button svg.i { width: 23px; height: 23px; }
+  nav.tabs button[aria-current="page"] { color: var(--wine); }
+
+  /* ---------- лента дней и фильтры ---------- */
+  .strip { position: sticky; top: calc(var(--bar-h) + env(safe-area-inset-top)); z-index: 15; background: var(--snow);
+    margin: 0 -18px; padding: 8px 18px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--frost); }
+  .strip::-webkit-scrollbar, .filters::-webkit-scrollbar { display: none; }
+  .strip button { flex: none; min-width: 56px; min-height: 48px; border: 1px solid var(--frost); background: var(--paper); border-radius: 10px; padding: 4px 8px; line-height: 1.15; text-align: center; }
+  .strip button .d { display: block; font-size: 12px; color: var(--slate); }
+  .strip button .n { display: block; font: 700 17px var(--cond); font-variant-numeric: tabular-nums; }
+  .strip button.today { border-color: var(--wine); }
+  .strip button[aria-current="true"] { background: var(--fir); border-color: var(--fir); color: #fff; }
+  .strip button[aria-current="true"] .d { color: var(--sign-dim); }
+  .filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 12px -18px 0; padding: 0 18px; }
+
+  /* ---------- таймлайн дня ---------- */
+  .day { padding-top: 22px; scroll-margin-top: calc(var(--bar-h) + 76px + env(safe-area-inset-top)); }
+  .day-head { display: flex; align-items: baseline; gap: 10px; }
+  .day-head .t { font: 700 24px var(--cond); color: var(--fir); }
+  @media (prefers-color-scheme: dark) { .day-head .t { color: var(--ink); } }
+  .day-head .d { color: var(--slate); font-size: 15px; flex: 1; }
+  .day-head .sum { color: var(--slate); font: 600 15px var(--cond); font-variant-numeric: tabular-nums; }
+  .day-head .today { font: 600 13px var(--body); color: var(--wine); }
+  .day-route { color: var(--slate); font-size: 14px; margin: 1px 0 8px; }
+  .tl { list-style: none; margin: 0; padding: 0; }
+  .ev { width: 100%; border: 0; background: none; text-align: left; display: grid; grid-template-columns: 46px 28px 1fr; gap: 0 8px; padding: 0; min-height: 56px; }
+  .ev .tm { font: 700 16px/1 var(--cond); font-variant-numeric: tabular-nums; padding-top: 12px; text-align: right; color: var(--ink); }
+  .ev .rail { position: relative; display: flex; justify-content: center; }
+  .ev .rail::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--frost); }
+  .tl li:first-child .ev .rail::before { top: 14px; }
+  .tl li:last-child .ev .rail::before { bottom: calc(100% - 14px); }
+  .ev .node { position: relative; margin-top: 6px; width: 28px; height: 28px; border-radius: 50%; background: var(--paper); border: 2px solid var(--fir); color: var(--fir); display: grid; place-items: center; }
+  @media (prefers-color-scheme: dark) { .ev .node { border-color: var(--slate); color: var(--ink); } }
+  .ev .node svg.i { width: 15px; height: 15px; stroke-width: 2; }
+  .ev.is-idea .node { border-style: dashed; border-color: var(--edge); color: var(--slate); }
+  .ev .body { padding: 9px 0 14px; border-bottom: 1px solid var(--frost); min-width: 0; }
+  .tl li:last-child .ev .body { border-bottom: 0; }
+  .ev .title { display: block; font-weight: 500; font-size: 16px; line-height: 1.3; }
+  .ev .sub { display: block; color: var(--slate); font-size: 14px; margin-top: 1px; }
+  .ev .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .ev.is-past { opacity: .5; }
+  .ev.is-next .node { background: var(--wine); border-color: var(--wine); color: var(--wine-ink); }
+
+  /* ---------- карта ---------- */
+  #map { position: relative; z-index: 0; isolation: isolate; height: calc(100vh - 260px); min-height: 360px; border-radius: var(--r-sign); border: 1px solid var(--frost); margin-top: 12px; background: var(--frost); }
+  .pin { width: 30px; height: 30px; border-radius: 50%; background: var(--fir); color: #fff; border: 2px solid #fff; display: grid; place-items: center;
+    font: 700 14px var(--cond); box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .pin.today { background: var(--wine); color: var(--wine-ink); }
+  .leaflet-popup-content { font-family: var(--body); font-size: 14px; margin: 12px 14px; }
+  .leaflet-popup-content b { font-family: var(--cond); font-size: 16px; }
+  .leaflet-popup-content button { margin-top: 8px; border: 0; background: var(--wine); color: var(--wine-ink); border-radius: 8px; padding: 6px 10px; font: 600 14px var(--body); }
+  .map-note { color: var(--slate); font-size: 13px; margin-top: 8px; }
+
+  /* ---------- нижняя карточка ---------- */
+  .backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(9,20,17,.45); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; background: var(--paper); border-radius: 18px 18px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,.2);
+    max-height: 90vh; overflow-y: auto; transform: translateY(105%); transition: transform .25s ease; padding: 0 0 calc(18px + env(safe-area-inset-bottom)); overscroll-behavior: contain; visibility: hidden; }
+  .sheet.open { transform: translateY(0); visibility: visible; }
+  .sheet .inner { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+  .sheet .handle { padding: 10px 0 2px; display: grid; place-items: center; touch-action: none; }
+  .sheet .handle i { width: 40px; height: 5px; border-radius: 3px; background: var(--frost); }
+  .sheet .top { display: flex; align-items: center; gap: 8px; color: var(--slate); font-size: 14px; min-height: 44px; }
+  .sheet .top .grow { flex: 1; }
+  .sheet .top.title { color: var(--ink); font: 700 21px var(--cond); }
+  .sheet h3 { margin: 2px 0 4px; font: 700 26px/1.15 var(--cond); }
+  .sheet .when { color: var(--slate); font-size: 15px; }
+  .sheet .addr { font-size: 15px; margin-top: 2px; }
+  .sheet .details { margin-top: 12px; font-size: 16px; white-space: pre-line; }
+  .sheet p.lead { color: var(--slate); font-size: 15px; margin: 0 0 4px; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--frost); border: 1px solid var(--frost); border-radius: var(--r); overflow: hidden; margin-top: 16px; }
+  .fact { background: var(--paper); padding: 9px 12px; }
+  .fact .k { font-size: 13px; color: var(--slate); }
+  .fact .v { font-weight: 500; margin-top: 1px; }
+  .actions { display: grid; gap: 8px; margin-top: 18px; }
+  @media (min-width: 700px) { .actions { grid-template-columns: 1fr 1fr; } }
+
+  /* ---------- формы ---------- */
+  .fld { display: block; margin-top: 14px; }
+  .fld > span { display: block; font-size: 14px; color: var(--slate); margin-bottom: 6px; }
+  .inp { width: 100%; border: 1px solid var(--edge); background: var(--snow); border-radius: var(--r); padding: 11px 12px; font-size: 16px; min-height: 48px; }
+  .inp:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .inp[aria-invalid="true"] { border-color: var(--wine); }
+  textarea.inp { resize: vertical; min-height: 88px; }
+  .amount { position: relative; }
+  .amount .inp { font: 700 30px var(--cond); padding-right: 62px; font-variant-numeric: tabular-nums; }
+  .amount .cur { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font: 600 18px var(--cond); color: var(--slate); }
+  .cats { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cats .chip[aria-pressed="true"] { background: var(--wine); border-color: var(--wine); color: var(--wine-ink); }
+  .err { color: var(--wine); font-size: 14px; margin-top: 8px; min-height: 1.2em; }
+
+  /* ---------- бюджет ---------- */
+  .total { margin: 6px 0 4px; }
+  .total .k { color: var(--slate); font-size: 15px; }
+  .total .v { font: 700 44px/1.05 var(--cond); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .total .s { color: var(--slate); font-size: 14px; margin-top: 2px; }
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--frost); border: 1px solid var(--frost); border-radius: var(--r); overflow: hidden; margin: 14px 0 18px; }
+  .kpi { background: var(--paper); padding: 10px 12px; }
+  .kpi .k { color: var(--slate); font-size: 13px; }
+  .kpi .v { font: 700 22px var(--cond); font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; border-radius: 99px; background: var(--frost); overflow: hidden; margin: 10px 0 2px; }
+  .bar > i { display: block; height: 100%; background: var(--chart); border-radius: 99px; }
+  .bar.over > i { background: var(--wine); }
+  .chart { margin: 4px 0 20px; }
+  .chart h3, .list h3 { font: 600 15px var(--body); color: var(--slate); margin: 0 0 8px; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 132px; padding-top: 22px; border-bottom: 1px solid var(--edge); }
+  .bars button { flex: 1; height: 100%; border: 0; background: none; padding: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; }
+  .bars .col { width: 100%; max-width: 30px; background: var(--chart); border-radius: 4px 4px 0 0; min-height: 0; }
+  .bars .col.zero { height: 2px !important; background: var(--frost); border-radius: 1px; }
+  .bars .val { position: absolute; font: 600 12.5px var(--cond); color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bars button[aria-pressed="true"] .col { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .axis { display: flex; gap: 6px; margin-top: 5px; }
+  .axis span { flex: 1; text-align: center; font: 600 13px var(--cond); color: var(--slate); }
+  .axis span.today { color: var(--wine); }
+  .list { margin-bottom: 20px; }
+  .list .items { background: var(--paper); border: 1px solid var(--frost); border-radius: var(--r); overflow: hidden; }
+  .list .r { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 0; border-top: 1px solid var(--frost); background: none; text-align: left; min-height: 52px; }
+  .list .r:first-child { border-top: 0; }
+  .list .r .l { flex: 1; min-width: 0; }
+  .list .r .l small { display: block; color: var(--slate); font-size: 13px; }
+  .list .r .n { font: 600 16px var(--cond); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .meter { height: 4px; border-radius: 99px; background: var(--frost); margin-top: 6px; overflow: hidden; }
+  .meter > i { display: block; height: 100%; background: var(--chart); }
+  .group-head { display: flex; justify-content: space-between; color: var(--slate); font: 600 15px var(--body); margin: 18px 2px 6px; }
+
+  .fab { position: fixed; right: max(18px, calc(50% - 342px)); bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px); z-index: 25;
+    display: flex; align-items: center; gap: 8px; border: 0; border-radius: 28px; height: 54px; padding: 0 22px 0 18px;
+    background: var(--wine); color: var(--wine-ink); font: 700 17px var(--cond); box-shadow: 0 6px 18px rgba(0,0,0,.22); }
+  .fab[hidden] { display: none; }
+  #p-budget, #p-ideas { padding-bottom: 76px; }
+
+  /* ---------- подготовка: дела и вещи ---------- */
+  .check { width: 100%; display: flex; align-items: center; gap: 12px; background: var(--paper); border: 1px solid var(--frost); border-radius: var(--r); padding: 11px 12px; margin-bottom: 6px; text-align: left; min-height: 54px; }
+  .check .box { width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--edge); flex: none; display: grid; place-items: center; color: #fff; }
+  .check .box svg.i { width: 15px; height: 15px; stroke-width: 2.8; }
+  .check[aria-pressed="true"] .box { background: var(--chart); border-color: var(--chart); }
+  .check[aria-pressed="true"] .name { text-decoration: line-through; color: var(--slate); }
+  .check .name { flex: 1; min-width: 0; }
+  .check .name small { display: block; color: var(--slate); font-size: 13px; text-decoration: none; }
+  .check .side { color: var(--slate); font-size: 13px; text-align: right; white-space: nowrap; }
+  .due { font: 600 14px var(--cond); }
+  .due.late { color: var(--wine); }
+  .due.soon { color: var(--warn); }
+  div.check { cursor: default; }
+
+  /* ---------- идеи ---------- */
+  .idea { display: flex; gap: 12px; background: var(--paper); border: 1px solid var(--frost); border-radius: var(--r); padding: 12px; margin-bottom: 6px; }
+  .idea .txt { flex: 1; min-width: 0; }
+  .idea .t { font-weight: 500; }
+  .idea .c { font-size: 14px; color: var(--slate); margin-top: 2px; }
+  .idea .a { font-size: 13px; color: var(--faint); margin-top: 6px; }
+  .vote { flex: none; align-self: flex-start; min-width: 56px; min-height: 48px; border: 1px solid var(--edge); background: var(--paper); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 2px 8px; }
+  .vote svg.i { width: 18px; height: 18px; }
+  .vote b { font: 700 16px var(--cond); line-height: 1.1; }
+  .vote[aria-pressed="true"] { background: var(--wine); border-color: var(--wine); color: var(--wine-ink); }
+  .vote[aria-pressed="true"] svg.i { fill: currentColor; }
+
+  .foot { color: var(--faint); font-size: 13px; text-align: center; margin: 26px 0 8px; }
+  .toast { position: fixed; left: 50%; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 84px); transform: translate(-50%, 16px);
+    background: var(--ink); color: var(--snow); padding: 10px 15px; border-radius: 12px; font-size: 15px; opacity: 0; transition: .2s; z-index: 60; pointer-events: none; max-width: 90vw; text-align: center; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media print {
+    nav.tabs, .appbar .iconbtn, .strip, .filters, .banner, .now, .foot, .fab, .seg, #map, .row-acts { display: none !important; }
+    section.panel { display: block !important; }
+    body { padding: 0; background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<header class="appbar" id="appbar">
+  <div class="wrap">
+    <h1 id="title">Планировщик поездки</h1>
+    <button class="iconbtn" id="refresh" type="button" aria-label="Обновить данные"></button>
+    <a class="iconbtn" id="edit-link" href="#" target="_blank" rel="noopener" aria-label="Открыть таблицу"></a>
+    <button class="iconbtn" id="settings" type="button" aria-label="Настройки" data-settings></button>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="hero">
+    <p class="status" id="status"></p>
+    <div class="dates" id="dates"></div>
+    <div class="people" id="people"></div>
+    <nav class="sign" id="sign" aria-label="Маршрут по городам" hidden></nav>
+    <p class="note" id="note"></p>
+  </div>
+  <div id="banner" role="status"></div>
+  <div id="pending"></div>
+
+  <section class="panel" id="p-route" aria-labelledby="t-route">
+    <div id="now"></div>
+    <div class="seg" id="route-view">
+      <button type="button" data-view="list">Список</button>
+      <button type="button" data-view="map">Карта</button>
+    </div>
+    <div class="strip" id="strip" aria-label="Дни поездки"></div>
+    <div id="route-list">
+      <div class="filters" id="filters" aria-label="Фильтр событий"></div>
+      <div id="route"></div>
+      <div class="row-acts" style="margin-top:22px"><button class="btn secondary small" type="button" data-ics-menu>Добавить в календарь</button></div>
+    </div>
+    <div id="route-map" hidden>
+      <div id="map" role="region" aria-label="Карта маршрута"></div>
+      <p class="map-note" id="map-note"></p>
+    </div>
+  </section>
+
+  <section class="panel" id="p-budget" aria-labelledby="t-budget">
+    <div class="seg" id="seg-budget">
+      <button type="button" data-seg="fact">Расходы</button>
+      <button type="button" data-seg="plan">План</button>
+    </div>
+    <div id="budget"></div>
+  </section>
+
+  <section class="panel" id="p-prep" aria-labelledby="t-prep">
+    <div class="seg" id="seg-prep">
+      <button type="button" data-prep="tasks">Дела</button>
+      <button type="button" data-prep="pack">Вещи</button>
+    </div>
+    <div id="prep"></div>
+  </section>
+
+  <section class="panel" id="p-ideas" aria-labelledby="t-ideas">
+    <h2 class="sec">Идеи</h2>
+    <div id="ideas"></div>
+  </section>
+
+  <div class="foot" id="updated"></div>
+</main>
+
+<button class="fab" id="fab" type="button" hidden></button>
+<nav class="tabs" id="tabs" aria-label="Разделы"></nav>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="handle" id="sheet-handle"><i></i></div>
+  <div class="inner" id="sheet-body"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ================= настройки =================
+  const CFG = Object.assign({ SHEET_ID: "", SCRIPT_URL: "", TABS: {}, REFRESH_SECONDS: 120, EXPENSE_CATEGORIES: null, TIMEZONE: "Europe/Vienna" }, window.PLANNER_CONFIG || {});
+  const TABS = Object.assign({ trip: "Поездка", itinerary: "Маршрут", tasks: "Подготовка", packing: "Сборы", ideas: "Идеи", expenses: "Расходы" }, CFG.TABS);
+  const EXP_CATS = CFG.EXPENSE_CATEGORIES || ["Топливо", "Парковка", "Дороги и виньетка", "Еда", "Жильё", "Билеты и музеи", "Транспорт", "Покупки", "Другое"];
+  const DEMO = {"trip": [["Параметр", "Значение"], ["Название", "Мюнхен, Зальцбург, Вена"], ["Начало", "16.12.2026"], ["Конец", "23.12.2026"], ["Участники", "Егор, Мама, Папа, Глеб"], ["Валюта", "EUR"], ["Бюджет", ""], ["Заметка", "Машина: из Мюнхена 19 декабря (или 18-го для Нойшванштайна), сдать в Вене. Темнеет около 16:30."]], "itinerary": [["День", "Дата", "Время", "Город", "Адрес", "Что", "Тип", "Подробности", "Ссылка", "Стоимость", "Валюта", "Статус", "Ответственный", "Координаты"], ["1", "16.12.2026", "", "Амстердам → Мюнхен", "", "Переезд в Мюнхен", "Переезд", "Поезд (около 8 ч, с пересадкой) или самолёт (около 1,5 ч).", "", "", "", "Идея", "", "48.1402, 11.5600"], ["1", "16.12.2026", "", "Мюнхен", "", "Заселение в Мюнхене", "Жильё", "3 ночи, 16–19 декабря. Перед Рождеством спрос высокий.", "", "", "", "Идея", "", "48.1402, 11.5600"], ["1", "16.12.2026", "18:00", "Мюнхен", "Marienplatz", "Рождественская ярмарка на Мариенплац", "Отдых", "Главная ярмарка города, работает до 24 декабря.", "", "", "", "Идея", "", "48.1374, 11.5755"], ["2", "17.12.2026", "10:00", "Мюнхен", "Viktualienmarkt", "Старый город, Фрауэнкирхе и Виктуалиенмаркт", "Экскурсия", "", "", "", "", "Идея", "", "48.1351, 11.5763"], ["2", "17.12.2026", "13:30", "Мюнхен", "Residenzstraße 1", "Резиденция баварских королей", "Экскурсия", "", "", "", "", "Идея", "", "48.1410, 11.5788"], ["2", "17.12.2026", "16:30", "Мюнхен", "Wittelsbacherplatz", "Средневековая ярмарка", "Отдых", "Работает до 23 декабря.", "", "", "", "Идея", "", "48.1430, 11.5774"], ["2", "17.12.2026", "19:00", "Мюнхен", "Platzl 9", "Ужин в Хофбройхаусе", "Еда", "", "", "", "", "Идея", "", "48.1376, 11.5799"], ["3", "18.12.2026", "08:00", "Мюнхен", "", "Получить машину (если едем в Нойшванштайн)", "Переезд", "Проверить зимнюю резину, разрешение на выезд в Австрию и возврат в Вене.", "", "", "", "Идея", "", "48.1402, 11.5600"], ["3", "18.12.2026", "11:00", "Швангау", "Neuschwansteinstraße 20", "Замок Нойшванштайн", "Экскурсия", "Около 2 ч от Мюнхена. Вход строго по билетам с временем — купить заранее. Если не едем — свободный день в Мюнхене.", "https://www.neuschwanstein.de", "", "", "Идея", "", "47.5576, 10.7498"], ["4", "19.12.2026", "07:30", "Мюнхен", "", "Купить виньетку Австрии на 10 дней", "Другое", "Цифровая, на сайте ASFINAG, по номеру машины. 10-дневная действует сразу.", "https://shop.asfinag.at", "12.80", "EUR", "Планируем", "", "48.1402, 11.5600"], ["4", "19.12.2026", "08:00", "Мюнхен → Гальштат", "", "Дорога в Гальштат", "Переезд", "Около 3 ч.", "", "", "", "Идея", "", "47.5622, 13.6493"], ["4", "19.12.2026", "11:00", "Гальштат", "Marktplatz Hallstatt", "Гальштат", "Экскурсия", "Деревня у озера под горами — одно из самых красивых мест поездки. Успеть засветло.", "", "", "", "Идея", "", "47.5622, 13.6493"], ["4", "19.12.2026", "14:30", "Гальштат → Зальцбург", "", "Дорога в Зальцбург", "Переезд", "Около 1 ч 15 мин.", "", "", "", "Идея", "", "47.8095, 13.0550"], ["4", "19.12.2026", "", "Зальцбург", "", "Заселение в Зальцбурге", "Жильё", "1 ночь. Уточнить парковку у отеля.", "", "", "", "Идея", "", "47.8095, 13.0550"], ["4", "19.12.2026", "17:30", "Зальцбург", "Domplatz", "Рождественская ярмарка у собора", "Отдых", "Одна из старейших ярмарок Европы.", "", "", "", "Идея", "", "47.7980, 13.0470"], ["5", "20.12.2026", "09:00", "Зальцбург", "Festung Hohensalzburg", "Крепость Хоэнзальцбург", "Экскурсия", "Фуникулёр наверх, вид на город и горы.", "", "", "", "Идея", "", "47.7949, 13.0477"], ["5", "20.12.2026", "11:00", "Зальцбург", "Getreidegasse", "Гетрайдегассе и дом Моцарта", "Экскурсия", "", "", "", "", "Идея", "", "47.8000, 13.0430"], ["5", "20.12.2026", "12:30", "Зальцбург → Вена", "", "Дорога в Вену", "Переезд", "Около 3 ч.", "", "", "", "Идея", "", "48.2082, 16.3738"], ["5", "20.12.2026", "16:00", "Вена", "", "Сдать машину", "Переезд", "Уточнить офис, открытый в воскресенье (например, в аэропорту), или сдать утром 21-го.", "", "", "", "Идея", "", "48.1103, 16.5697"], ["5", "20.12.2026", "", "Вена", "", "Заселение в Вене", "Жильё", "3 ночи, 20–23 декабря.", "", "", "", "Идея", "", "48.2082, 16.3738"], ["5", "20.12.2026", "19:00", "Вена", "Opernring 2", "Венская опера: «Осуждение Фауста»", "Отдых", "Новая постановка Берлиоза, 20 декабря. Сам зал — одно из главных впечатлений Вены. Время начала проверить в афише.", "https://www.wiener-staatsoper.at", "", "", "Идея", "", "48.2030, 16.3690"], ["6", "21.12.2026", "09:00", "Вена", "Michaelerplatz", "Хофбург: императорские покои и музей Сиси", "Экскурсия", "", "", "", "", "Идея", "", "48.2079, 16.3660"], ["6", "21.12.2026", "11:00", "Вена", "Michaelerplatz 1", "Испанская школа верховой езды", "Отдых", "Липицанеры в барочном манеже. Утренняя тренировка или выступление — расписание на сайте, билеты раскупают за недели.", "https://www.srs.at", "", "", "Идея", "", "48.2081, 16.3666"], ["6", "21.12.2026", "13:00", "Вена", "Herrengasse 14", "Обед в кафе Central", "Еда", "", "", "", "", "Идея", "", "48.2104, 16.3655"], ["6", "21.12.2026", "15:00", "Вена", "Stephansplatz", "Собор Святого Стефана", "Экскурсия", "Подняться на южную башню — вид на центр.", "", "", "", "Идея", "", "48.2085, 16.3731"], ["6", "21.12.2026", "16:30", "Вена", "Am Hof", "Огни Грабена, ярмарки Ам Хоф и Фрайунг", "Отдых", "Ам Хоф и Фрайунг работают до 23 декабря.", "", "", "", "Идея", "", "48.2105, 16.3678"], ["6", "21.12.2026", "18:30", "Вена", "Rathausplatz", "Ярмарка на Ратушной площади", "Отдых", "Самая большая ярмарка Вены, работает до 26 декабря.", "", "", "", "Идея", "", "48.2108, 16.3576"], ["7", "22.12.2026", "09:30", "Вена", "Schönbrunner Schloßstraße 47", "Дворец Шёнбрунн", "Экскурсия", "Билеты с временем входа — заранее. Во дворе ярмарка (до 6 января).", "https://www.schoenbrunn.at", "", "", "Идея", "", "48.1845, 16.3122"], ["7", "22.12.2026", "13:30", "Вена", "Prinz-Eugen-Straße 27", "Бельведер: «Поцелуй» Климта", "Экскурсия", "Верхний Бельведер. У дворца своя ярмарка.", "https://www.belvedere.at", "", "", "Идея", "", "48.1915, 16.3809"], ["7", "22.12.2026", "16:00", "Вена", "Kohlmarkt 14", "Торт в кафе Demel или Sacher", "Еда", "", "", "", "", "Идея", "", "48.2087, 16.3673"], ["7", "22.12.2026", "18:00", "Вена", "Spittelberggasse", "Ярмарка на Шпиттельберге", "Отдых", "Ремёсла в старинных переулках, до 23 декабря.", "", "", "", "Идея", "", "48.2038, 16.3540"], ["7", "22.12.2026", "19:30", "Вена", "Wollzeile 5", "Венский шницель в Figlmüller", "Еда", "Стол забронировать заранее.", "", "", "", "Идея", "", "48.2088, 16.3754"], ["8", "23.12.2026", "09:30", "Вена", "Riesenradplatz 1", "Колесо обозрения в Пратере", "Отдых", "", "", "", "", "Идея", "", "48.2166, 16.3958"], ["8", "23.12.2026", "11:00", "Вена", "Karlsplatz", "Ярмарка Art Advent у Карлскирхе", "Отдых", "Последний день работы — 23 декабря.", "", "", "", "Идея", "", "48.1981, 16.3717"], ["8", "23.12.2026", "15:00", "Вена → Амстердам", "", "Вылет в Амстердам", "Переезд", "Выехать в аэропорт за 2,5 ч. 23 декабря — пиковый день.", "", "", "", "Идея", "", "48.1103, 16.5697"]], "tasks": [["Дело", "До", "Кто", "Готово", "Ссылка", "Заметка"], ["Забронировать отели: Мюнхен, Зальцбург, Вена", "10.11.2026", "", "Нет", "", "16–19, 19–20, 20–23 декабря"], ["Билеты Амстердам → Мюнхен на 16 декабря", "15.11.2026", "", "Нет", "", ""], ["Рейс Вена → Амстердам на 23 декабря", "15.11.2026", "", "Нет", "", "Предрождественский спрос"], ["Аренда машины: Мюнхен → Вена", "15.11.2026", "", "Нет", "", "Зимняя резина, выезд в Австрию, доплата за возврат в другой стране"], ["Решить с оперой 20 декабря и купить билеты", "20.11.2026", "", "Нет", "https://www.wiener-staatsoper.at", ""], ["Решить с Нойшванштайном и купить билеты", "01.12.2026", "", "Нет", "https://www.neuschwanstein.de", ""], ["Испанская школа: расписание на 21–22 декабря и билеты", "01.12.2026", "", "Нет", "https://www.srs.at", ""], ["Билеты в Шёнбрунн на 22 декабря", "10.12.2026", "", "Нет", "https://www.schoenbrunn.at", ""], ["Билеты в Бельведер на 22 декабря", "10.12.2026", "", "Нет", "https://www.belvedere.at", ""], ["Стол в Figlmüller на 22 декабря", "10.12.2026", "", "Нет", "", ""], ["Страховка путешествия на четверых", "10.12.2026", "", "Нет", "", ""], ["Проверить права у всех водителей", "10.12.2026", "", "Нет", "", ""], ["Купить виньетку Австрии на 10 дней", "19.12.2026", "", "Нет", "https://shop.asfinag.at", "В день выезда, по номеру машины"]], "packing": [["Вещь", "Категория", "Кто берёт", "Взято"], ["Паспорт или ID", "Документы", "Все", "Нет"], ["Водительские права всех водителей", "Документы", "", "Нет"], ["Кредитная карта водителя (депозит за машину)", "Документы", "", "Нет"], ["Страховка", "Документы", "", "Нет"], ["Брони и билеты (в телефоне)", "Документы", "", "Нет"], ["Тёплая куртка", "Одежда", "Все", "Нет"], ["Термобельё", "Одежда", "Все", "Нет"], ["Шапка, шарф, перчатки", "Одежда", "Все", "Нет"], ["Зимняя непромокаемая обувь", "Одежда", "Все", "Нет"], ["Вечерняя одежда для оперы", "Одежда", "", "Нет"], ["Зарядки и пауэрбанк", "Техника", "", "Нет"], ["Автомобильная зарядка и держатель для телефона", "Техника", "", "Нет"], ["Аптечка", "Здоровье", "", "Нет"], ["Небольшая сумма наличными", "Другое", "", "Нет"]], "ideas": [["Идея", "Автор", "Комментарий", "Голоса"], ["Концерт в Золотом зале Musikverein", "", "Только если в эти дни будет сильная программа", ""], ["Каток на Ратушной площади", "", "Рядом с ярмаркой", ""], ["Музей истории искусств и кафе под куполом", "", "Вместо Бельведера или вместе с ним", ""], ["Ярмарка во дворце Хеллбрунн", "", "Под Зальцбургом", ""], ["Кёнигсзее по дороге из Мюнхена", "", "Если не едем в Гальштат", ""], ["Иннсбрук", "", "Отложили ради Вены", ""]], "expenses": [["ID", "Дата", "Сумма", "Валюта", "Категория", "Описание", "Добавил"]]};
+  const params = new URLSearchParams(location.search);
+  const FORCE_DEMO = params.has("demo") || !CFG.SHEET_ID;
+  const SCRIPT = String(CFG.SCRIPT_URL || "").trim();
+  const CAN_WRITE = FORCE_DEMO || !!SCRIPT;
+  const NS = CFG.SHEET_ID || "demo";
+  const K = { cache: "planner-cache-" + NS, queue: "planner-queue-" + NS, user: "planner-user", geo: "planner-geo" };
+  const EDIT_URL = CFG.SHEET_ID ? "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(CFG.SHEET_ID) + "/edit" : "";
+  const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ================= иконки =================
+  const ICONS = {
+    route: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>',
+    wallet: '<path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/><path d="M4 7l2.5-3H16v3"/><path d="M15.5 13.5h1.5"/>',
+    bag: '<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M9 12v4M15 12v4"/>',
+    idea: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.8 10.6c.6.5.8 1.2.8 1.9V16h6v-.5c0-.7.2-1.4.8-1.9A6 6 0 0 0 12 3z"/>',
+    refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
+    sheet: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>', chev: '<path d="M9 6l6 6-6 6"/>', arrow: '<path d="M5 12h13M13 6l6 6-6 6"/>',
+    nav: '<path d="M3 11l18-8-8 18-2-8-8-2z"/>',
+    link: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+    cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+    heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+    t_move: '<path d="M4 12h14M13 7l5 5-5 5"/>',
+    t_stay: '<path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="1.8"/>',
+    t_food: '<path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3"/><path d="M17 21V3c-2 0-3.5 2.5-3.5 6v4H17"/>',
+    t_sight: '<path d="M3 21h18M5 21v-9M10 21v-9M14 21v-9M19 21v-9M2.5 9.5 12 4l9.5 5.5z"/>',
+    t_rest: '<path d="M12 3v18M5.6 6.6l12.8 10.8M5.6 17.4 18.4 6.6"/>',
+    t_shop: '<path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+    t_other: '<path d="M12 21s-6.5-5.7-6.5-11a6.5 6.5 0 0 1 13 0c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/>'
+  };
+  const icon = (n) => '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (ICONS[n] || "") + "</svg>";
+  const TYPE_ICON = { "переезд": "t_move", "перелёт": "t_move", "перелет": "t_move", "поезд": "t_move", "трансфер": "t_move", "жильё": "t_stay", "жилье": "t_stay", "отель": "t_stay",
+    "еда": "t_food", "ресторан": "t_food", "экскурсия": "t_sight", "музей": "t_sight", "отдых": "t_rest", "покупки": "t_shop", "другое": "t_other" };
+  const STATUS_CLASS = { "идея": "st-idea", "планируем": "st-plan", "забронировано": "st-booked", "оплачено": "st-paid" };
+  const STATUS_ORDER = ["Оплачено", "Забронировано", "Планируем", "Идея"];
+  const YES = ["да", "yes", "+", "x", "х", "✓", "✔", "true", "1", "взято", "готово"];
+
+  // ================= утилиты =================
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const low = (s) => String(s || "").trim().toLowerCase();
+  const isYes = (v) => YES.includes(low(v));
+  const safeUrl = (u) => /^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "";
+  const num = (s) => { const t = String(s == null ? "" : s).replace(/\s|\u00a0/g, "").replace(",", ".").replace(/[^\d.\-]/g, ""); const n = parseFloat(t); return isFinite(n) ? n : null; };
+  const fmtNum = (n) => new Intl.NumberFormat("ru-RU", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }).format(n);
+  const money = (n, cur) => fmtNum(n) + " " + (cur || (MODEL && MODEL.currency) || "EUR");
+  function parseDate(s) {
+    const t = String(s || "").trim();
+    let m = t.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
+    if (m) { let y = +m[3]; if (y < 100) y += 2000; const d = new Date(y, +m[2] - 1, +m[1]); return isNaN(d) ? null : d; }
+    m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+  }
+  const pad = (n) => String(n).padStart(2, "0");
+  const toRu = (d) => pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear();
+  const toIso = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const sameDay = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const dayDiff = (a, b) => Math.round((new Date(a.getFullYear(), a.getMonth(), a.getDate()) - new Date(b.getFullYear(), b.getMonth(), b.getDate())) / 864e5);
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const timeMin = (t) => { const m = String(t || "").match(/(\d{1,2})[:.](\d{2})/); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+  const fmtLong = (d) => d.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+  const fmtDM = (d) => d.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  const fmtDMs = (d) => d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" }).replace(".", "");
+  const wd = (d) => d.toLocaleDateString("ru-RU", { weekday: "short" });
+  const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  function plural(n, one, few, many) { const a = Math.abs(n) % 100, b = a % 10; if (a > 10 && a < 20) return many; if (b > 1 && b < 5) return few; if (b === 1) return one; return many; }
+  const days = (n) => n + " " + plural(n, "день", "дня", "дней");
+  const fmtDuration = (min) => min < 60 ? min + " мин" : Math.floor(min / 60) + " ч" + (min % 60 ? " " + (min % 60) + " мин" : "");
+  const lsGet = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  function now() { const p = params.get("now"); if (p) { const d = new Date(p); if (!isNaN(d)) return d; } return new Date(); }
+  const parseCoords = (s) => { const m = String(s || "").match(/(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)/); if (!m) return null; const a = +m[1].replace(",", "."), b = +m[2].replace(",", "."); return Math.abs(a) <= 90 && Math.abs(b) <= 180 ? [a, b] : null; };
+  const voters = (s) => String(s || "").split(",").map((v) => v.trim()).filter(Boolean);
+
+  // ================= чтение таблицы (gviz, JSONP) =================
+  function loadTab(tabName) {
+    return new Promise((resolve, reject) => {
+      const cb = "__gv_" + Math.random().toString(36).slice(2);
+      const s = document.createElement("script");
+      let done = false;
+      const finish = (fn, arg) => { if (done) return; done = true; clearTimeout(timer); try { delete window[cb]; } catch (e) {} s.remove(); fn(arg); };
+      const timer = setTimeout(() => finish(reject, new Error("таблица не ответила вовремя")), 15000);
+      window[cb] = (resp) => {
+        if (!resp || resp.status === "error") {
+          const msg = resp && resp.errors && resp.errors[0] ? (resp.errors[0].detailed_message || resp.errors[0].message) : "ошибка";
+          finish(reject, new Error("вкладка «" + tabName + "»: " + msg));
+        } else finish(resolve, tableToRows(resp.table));
+      };
+      s.onerror = () => finish(reject, new Error("нет связи с Google"));
+      s.onload = () => setTimeout(() => finish(reject, new Error("нет доступа к таблице")), 300);
+      s.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(CFG.SHEET_ID) + "/gviz/tq?tqx=out:json;responseHandler:" + cb + "&headers=1&sheet=" + encodeURIComponent(tabName) + "&_=" + Date.now();
+      document.head.appendChild(s);
+    });
+  }
+  function tableToRows(table) {
+    const cell = (c) => String(c == null ? "" : (c.f != null ? c.f : (c.v == null ? "" : c.v))).trim();
+    let header = (table.cols || []).map((c) => String(c.label || "").trim());
+    const rows = (table.rows || []).map((r) => (r.c || []).map(cell));
+    if (!header.some(Boolean) && rows.length) header = rows.shift();
+    return toObjects([header].concat(rows));
+  }
+  function toObjects(matrix) {
+    if (!matrix || !matrix.length) return [];
+    const [h, ...rows] = matrix, header = h.map((x) => String(x || "").trim());
+    return rows.map((r) => { const o = {}; header.forEach((k, i) => { if (k) o[k] = String(r[i] == null ? "" : r[i]).trim(); }); return o; }).filter((o) => Object.values(o).some(Boolean));
+  }
+  const KEYS = ["trip", "itinerary", "tasks", "packing", "ideas", "expenses"];
+  async function loadAll() {
+    if (FORCE_DEMO) { const d = { demo: true }; KEYS.forEach((k) => { d[k] = toObjects(DEMO[k] || []); }); return d; }
+    const results = await Promise.allSettled(KEYS.map((k) => loadTab(TABS[k])));
+    if (results[1].status === "rejected") throw results[1].reason;
+    const data = { loadedAt: Date.now(), warnings: [] };
+    KEYS.forEach((k, i) => { if (results[i].status === "fulfilled") data[k] = results[i].value; else { data[k] = []; data.warnings.push(results[i].reason.message); } });
+    return data;
+  }
+
+  // ================= запись (Apps Script) и очередь =================
+  let user = Object.assign({ name: "", code: "" }, lsGet(K.user) || {});
+  let queue = lsGet(K.queue) || [];
+  const saveQueue = () => lsSet(K.queue, queue);
+  async function api(action, data, code) {
+    let res, j;
+    try { res = await fetch(SCRIPT, { method: "POST", body: JSON.stringify({ action, data, code: code == null ? user.code : code }) }); }
+    catch (e) { const err = new Error("нет связи"); err.network = true; throw err; }
+    try { j = await res.json(); } catch (e) { const err = new Error("скрипт не ответил"); err.network = true; throw err; }
+    if (!j.ok) { const err = new Error(j.error || "ошибка"); if (j.auth === false) err.auth = true; else err.server = true; throw err; }
+    return j;
+  }
+  function applyOp(d, op, pending) {
+    const x = op.data;
+    if (op.action === "addIdea") d.ideas.push({ "Идея": x.idea, "Автор": x.author, "Комментарий": x.comment, "Голоса": "", _pending: pending });
+    if (op.action === "voteIdea") { const r = d.ideas.find((r) => low(r["Идея"]) === low(x.idea)); if (r) { let v = voters(r["Голоса"]).filter((n) => low(n) !== low(x.name)); if (x.on) v.push(x.name); r["Голоса"] = v.join(", "); r._pending = pending; } }
+    if (op.action === "setPacked") { const r = d.packing.find((r) => low(r["Вещь"]) === low(x.item)); if (r) { r["Взято"] = x.done ? "Да" : "Нет"; r._pending = pending; } }
+    if (op.action === "setTask") { const r = d.tasks.find((r) => low(r["Дело"]) === low(x.task)); if (r) { r["Готово"] = x.done ? "Да" : "Нет"; r._pending = pending; } }
+    if (op.action === "addExpense" && !d.expenses.some((r) => r.ID === x.id))
+      d.expenses.push({ ID: x.id, "Дата": x.date, "Сумма": String(x.amount), "Валюта": x.currency, "Категория": x.category, "Описание": x.note, "Добавил": x.author, _pending: pending });
+    if (op.action === "deleteExpense") d.expenses = d.expenses.filter((r) => r.ID !== x.id);
+  }
+  function submit(action, data) {
+    if (!CAN_WRITE) { toast("Запись с телефона не подключена"); return false; }
+    if (FORCE_DEMO) { applyOp(DATA, { action, data }, false); renderAll(); toast("Демо: в таблицу не сохраняется"); return true; }
+    if (!user.code) { openSettings("Чтобы сохранять изменения, укажите семейный код."); return false; }
+    queue.push({ qid: uid(), action, data, ts: Date.now() }); saveQueue();
+    renderAll(); flush(); return true;
+  }
+  let flushing = false;
+  async function flush() {
+    if (flushing || FORCE_DEMO || !SCRIPT || !queue.length || !user.code) { renderPending(); return; }
+    flushing = true; renderPending();
+    let sent = 0;
+    try {
+      while (queue.length) {
+        const op = queue[0];
+        try { await api(op.action, op.data); queue.shift(); saveQueue(); applyOp(DATA, op, false); sent++; }
+        catch (e) {
+          if (e.auth) { banner("warn", "Семейный код не подошёл. Изменения сохранены на телефоне — исправьте код в настройках."); break; }
+          if (e.server) { queue.shift(); saveQueue(); toast("Не сохранено: " + e.message); continue; }
+          break;
+        }
+      }
+    } finally {
+      flushing = false; renderAll();
+      if (sent) { toast(sent === 1 ? "Сохранено в таблицу" : "Сохранено изменений: " + sent); setTimeout(() => refresh(), 2000); }
+    }
+  }
+  function renderPending() {
+    const n = queue.length;
+    $("pending").innerHTML = n ? '<div class="banner info">' + (flushing ? "Отправляю изменения…" : "Не отправлено изменений: " + n + ". Они уйдут сами, когда появится связь.") + "</div>" : "";
+    const dot = $("settings").querySelector(".dot");
+    if (n && !dot) $("settings").insertAdjacentHTML("beforeend", '<span class="dot"></span>'); else if (!n && dot) dot.remove();
+  }
+
+  // ================= модель =================
+  let DATA = null, MODEL = null;
+  const state = { tab: lsGet("planner-tab") || "p-route", filter: lsGet("planner-filter") || "all", seg: lsGet("planner-seg") || "fact",
+    prep: lsGet("planner-prep") || "tasks", view: "list", mapDay: "all", bar: null, showPast: false };
+
+  function buildModel() {
+    const view = {}; ["tasks", "packing", "ideas", "expenses"].forEach((k) => { view[k] = (DATA[k] || []).map((r) => Object.assign({}, r)); });
+    queue.forEach((op) => applyOp(view, op, true));
+    const kv = {};
+    (DATA.trip || []).forEach((r) => { const k = low(r["Параметр"]); if (k) kv[k] = r["Значение"] || ""; });
+    const start = parseDate(kv["начало"]), end = parseDate(kv["конец"]);
+    const people = String(kv["участники"] || "").split(/[,;]/).map((p) => p.trim()).filter(Boolean);
+    const currency = (kv["валюта"] || "EUR").toUpperCase();
+    const items = (DATA.itinerary || []).filter((r) => r["Что"] || r["Подробности"]).map((r, i) => {
+      const date = parseDate(r["Дата"]);
+      let dayKey = r["День"] || "";
+      if (!dayKey && date && start) dayKey = String(dayDiff(date, start) + 1);
+      if (!dayKey) dayKey = r["Дата"] || "—";
+      return Object.assign({}, r, { _i: i, _date: date, _dayKey: dayKey, _min: timeMin(r["Время"]), _ll: parseCoords(r["Координаты"]) });
+    });
+    const map = new Map();
+    items.forEach((it) => { if (!map.has(it._dayKey)) map.set(it._dayKey, []); map.get(it._dayKey).push(it); });
+    const dayList = [...map.entries()].map(([key, list]) => {
+      let date = list.map((x) => x._date).find(Boolean) || null;
+      const n = parseFloat(key);
+      if (!date && start && isFinite(n)) date = addDays(start, n - 1);
+      let last = -1;
+      list.slice().sort((a, b) => a._i - b._i).forEach((x) => { if (x._min != null) last = x._min; x._sort = x._min != null ? x._min : last; });
+      list.sort((a, b) => a._sort - b._sort || a._i - b._i);
+      list.forEach((x) => { if (!x._date) x._date = date; });
+      const cities = [];
+      list.forEach((x) => String(x["Город"] || "").split("→").map((c) => c.trim()).filter(Boolean).forEach((c) => { if (!cities.includes(c)) cities.push(c); }));
+      const stay = list.find((x) => ["жильё", "жилье", "отель"].includes(low(x["Тип"])));
+      return { key, n: isFinite(n) ? n : null, date, list, cities, stay: stay ? String(stay["Город"] || "").split("→").pop().trim() : "" };
+    }).sort((a, b) => (a.n != null && b.n != null) ? a.n - b.n : (a.date && b.date ? a.date - b.date : String(a.key).localeCompare(String(b.key), "ru")));
+    // участки маршрута для таблички: город ночёвки по дням
+    const legs = []; let cur = "";
+    dayList.forEach((d) => { const c = d.stay || cur; if (!c) return; if (c !== cur) { legs.push({ city: c, from: d.date, to: null }); cur = c; } });
+    legs.forEach((l, i) => { l.to = i < legs.length - 1 ? legs[i + 1].from : end; });
+    const first = dayList[0] && dayList[0].cities[0], lastDay = dayList[dayList.length - 1];
+    const origin = first && legs[0] && first !== legs[0].city ? first : "";
+    const dest = lastDay ? lastDay.cities[lastDay.cities.length - 1] : "";
+    const t = now();
+    const expenses = view.expenses.map((r) => Object.assign(r, { _amt: num(r["Сумма"]), _date: parseDate(r["Дата"]), _cur: (r["Валюта"] || currency).toUpperCase() })).filter((r) => r._amt);
+    MODEL = { kv, start, end, people, currency, budget: num(kv["бюджет"]), items, days: dayList, legs, origin, dest: dest && legs.length && dest !== legs[legs.length - 1].city ? dest : "",
+      expenses, tasks: view.tasks, packing: view.packing, ideas: view.ideas, todayDay: dayList.find((d) => d.date && sameDay(d.date, t)) || null, title: kv["название"] || "Поездка" };
+  }
+
+  // ================= шапка =================
+  function renderHeader() {
+    const { kv, start, end, people, title, legs } = MODEL, t = now();
+    document.title = title; $("title").textContent = title;
+    let dates = "";
+    if (start && end) {
+      const total = dayDiff(end, start) + 1;
+      dates = (start.getMonth() === end.getMonth() ? start.getDate() + "–" + fmtDM(end) : fmtDM(start) + " – " + fmtDM(end)) + " " + end.getFullYear() + ", " + days(total);
+    } else dates = [kv["начало"], kv["конец"]].filter(Boolean).join(" – ");
+    $("dates").textContent = dates;
+    let status = "";
+    if (start) {
+      const d = dayDiff(start, t), e = end || start;
+      if (d > 1) status = "Через " + days(d);
+      else if (d === 1) status = "Завтра в путь";
+      else if (dayDiff(e, t) >= 0) status = "День " + (1 - d) + " из " + (dayDiff(e, start) + 1);
+      else status = "Поездка завершена";
+    }
+    $("status").textContent = status;
+    $("people").textContent = people.length ? people.join(", ") : "";
+    $("note").textContent = kv["заметка"] || "";
+    // табличка
+    if (!legs.length) { $("sign").hidden = true; return; }
+    const range = (a, b) => !a ? "" : !b || sameDay(a, b) ? fmtDMs(a) : (a.getMonth() === b.getMonth() ? a.getDate() + "–" + fmtDMs(b) : fmtDMs(a) + " – " + fmtDMs(b));
+    $("sign").innerHTML = "<ol>" + legs.map((l) => {
+      const isLast = l === legs[legs.length - 1];
+      const started = l.from && dayDiff(t, l.from) >= 0;
+      const notOver = !l.to || dayDiff(l.to, t) > 0 || (isLast && dayDiff(l.to, t) >= 0);
+      const st = started && notOver ? "now" : (started ? "done" : "");
+      return '<li class="' + st + '"' + (st === "now" ? ' aria-current="location"' : "") + '><span class="arr">' + icon("arrow") + '</span><span class="city">' + esc(l.city) + '</span><span class="when">' + esc(range(l.from, l.to)) + "</span></li>";
+    }).join("") + "</ol>" + ((MODEL.origin || MODEL.dest) ? '<div class="ends"><span>' + (MODEL.origin ? "из: " + esc(MODEL.origin) : "") + "</span><span>" + (MODEL.dest ? "обратно: " + esc(MODEL.dest) : "") + "</span></div>" : "");
+    $("sign").hidden = false;
+  }
+
+  // ================= маршрут: «сегодня», лента, таймлайн =================
+  function renderNow() {
+    const day = MODEL.todayDay;
+    if (!day) { $("now").innerHTML = ""; return; }
+    const t = now(), cur = t.getHours() * 60 + t.getMinutes();
+    const next = day.list.find((x) => x._min != null && x._min >= cur);
+    const untimed = day.list.filter((x) => x._min == null);
+    let body;
+    if (next) body = '<div class="next">' + esc(next["Время"]) + ", " + esc(next["Что"]) + '</div><div class="when">через ' + fmtDuration(next._min - cur) + (next["Город"] ? ", " + esc(next["Город"]) : "") + "</div>";
+    else if (untimed.length) body = '<div class="next">' + esc(untimed[0]["Что"]) + '</div><div class="when">без точного времени</div>';
+    else body = '<div class="next">На сегодня всё</div><div class="when">Запланированных событий больше нет</div>';
+    $("now").innerHTML = '<div class="now"><div class="lbl">Сегодня, ' + esc(fmtLong(t)) + "</div>" + body +
+      '<div class="acts"><button class="btn small secondary" type="button" data-goto="' + esc(day.key) + '">Весь день</button>' +
+      (next ? '<button class="btn small" type="button" data-open="' + next._i + '">Подробнее</button>' : "") + "</div></div>";
+  }
+  const FILTERS = [["all", "Все"], ["plan", "Без идей"], ["todo", "Не забронировано"], ["idea", "Идеи"]];
+  function passFilter(r) {
+    const st = low(r["Статус"]);
+    if (state.filter === "plan") return st !== "идея";
+    if (state.filter === "idea") return st === "идея";
+    if (state.filter === "todo") return st !== "забронировано" && st !== "оплачено";
+    return true;
+  }
+  function renderStrip() {
+    const map = state.view === "map";
+    $("strip").innerHTML = (map ? '<button type="button" data-goto="all" aria-current="' + (state.mapDay === "all") + '"><span class="d">Все</span><span class="n">дни</span></button>' : "") +
+      MODEL.days.map((d) => '<button type="button" data-goto="' + esc(d.key) + '" class="' + (MODEL.todayDay === d ? "today" : "") + '"' + (map ? ' aria-current="' + (state.mapDay === d.key) + '"' : "") +
+        ' aria-label="День ' + esc(d.n || d.key) + (d.date ? ", " + esc(fmtLong(d.date)) : "") + '"><span class="d">День ' + esc(d.n || d.key) + '</span><span class="n">' + (d.date ? esc(d.date.getDate() + " " + wd(d.date)) : "—") + "</span></button>").join("");
+  }
+  function renderFilters() {
+    $("filters").innerHTML = FILTERS.map(([v, l]) => '<button class="chip" type="button" data-f="' + v + '" aria-pressed="' + (state.filter === v) + '">' + l + "</button>").join("");
+  }
+  function renderRoute() {
+    const t = now(), curMin = t.getHours() * 60 + t.getMinutes();
+    document.querySelectorAll("#route-view button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
+    $("route-list").hidden = state.view !== "list"; $("route-map").hidden = state.view !== "map";
+    if (!MODEL.days.length) { $("route").innerHTML = '<div class="empty">Маршрут пока пуст. Добавьте строки во вкладку «' + esc(TABS.itinerary) + '».</div>'; return; }
+    const nextItem = MODEL.todayDay ? MODEL.todayDay.list.find((x) => x._min != null && x._min >= curMin) : null;
+    let html = "";
+    const pastDays = MODEL.todayDay ? MODEL.days.filter((d) => d.date && dayDiff(d.date, t) < 0) : [];
+    if (pastDays.length) html += '<div class="row-acts" style="margin-top:18px"><button class="btn ghost small" type="button" data-past aria-expanded="' + state.showPast + '">' +
+      (state.showPast ? "Скрыть прошедшие дни" : "Показать прошедшие дни (" + pastDays.length + ")") + "</button></div>";
+    MODEL.days.forEach((d) => {
+      if (!state.showPast && pastDays.includes(d)) return;
+      const list = d.list.filter(passFilter), costs = sumPlan(d.list), isToday = MODEL.todayDay === d;
+      html += '<section class="day" id="day-' + esc(d.key) + '" data-key="' + esc(d.key) + '" aria-label="День ' + esc(d.n || d.key) + '">' +
+        '<div class="day-head"><span class="t">День ' + esc(d.n || d.key) + "</span>" + '<span class="d">' + esc(d.date ? fmtLong(d.date) : "") + "</span>" +
+        (isToday ? '<span class="today">сегодня</span>' : "") + (costs ? '<span class="sum">' + esc(money(costs)) + "</span>" : "") + "</div>" +
+        '<div class="day-route">' + esc(d.cities.join(" → ")) + "</div>";
+      if (!list.length) html += '<p class="hint">Нет событий по выбранному фильтру.</p>';
+      else html += '<ol class="tl">' + list.map((r) => {
+        const past = d.date && (dayDiff(d.date, t) < 0 || (isToday && r._min != null && r._min < curMin - 60));
+        return "<li>" + evRow(r, past, r === nextItem) + "</li>";
+      }).join("") + "</ol>";
+      html += "</section>";
+    });
+    $("route").innerHTML = html;
+    observeDays();
+    if (state.view === "map") showMap();
+  }
+  function evRow(r, past, isNext) {
+    const st = r["Статус"], stl = low(st), cost = num(r["Стоимость"]);
+    return '<button type="button" class="ev' + (stl === "идея" ? " is-idea" : "") + (past ? " is-past" : "") + (isNext ? " is-next" : "") + '" data-open="' + r._i + '">' +
+      '<span class="tm">' + esc(r["Время"] || "") + '</span><span class="rail"><span class="node">' + icon(TYPE_ICON[low(r["Тип"])] || "t_other") + "</span></span>" +
+      '<span class="body"><span class="title">' + esc(r["Что"] || "Без названия") + '</span><span class="sub">' + esc([r["Тип"], r["Город"]].filter(Boolean).join(", ")) + "</span>" +
+      '<span class="badges">' + (st ? '<span class="badge ' + (STATUS_CLASS[stl] || "") + '">' + esc(st) + "</span>" : "") +
+      (cost ? '<span class="badge plain">' + esc(money(cost, (r["Валюта"] || "").toUpperCase())) + "</span>" : "") +
+      (r["Ответственный"] ? '<span class="badge plain">' + esc(r["Ответственный"]) + "</span>" : "") + "</span></span></button>";
+  }
+  let io = null;
+  function observeDays() {
+    if (io) io.disconnect();
+    if (!("IntersectionObserver" in window) || state.view !== "list") return;
+    io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) setActiveChip(e.target.dataset.key); }), { rootMargin: "-140px 0px -65% 0px" });
+    document.querySelectorAll(".day").forEach((el) => io.observe(el));
+  }
+  function setActiveChip(key) {
+    document.querySelectorAll("#strip button").forEach((b) => {
+      const on = b.dataset.goto === key; b.setAttribute("aria-current", String(on));
+      if (on) { const s = $("strip"); s.scrollTo({ left: b.offsetLeft - s.clientWidth / 2 + b.clientWidth / 2, behavior: REDUCED ? "auto" : "smooth" }); }
+    });
+  }
+  function gotoDay(key) {
+    if (state.view === "map") { state.mapDay = key; renderStrip(); showMap(); return; }
+    showTab("p-route");
+    if (!document.getElementById("day-" + key) && !state.showPast) { state.showPast = true; renderRoute(); }
+    const el = document.getElementById("day-" + key); if (!el) return;
+    const off = $("strip").getBoundingClientRect().height + $("appbar").getBoundingClientRect().height + 4;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: REDUCED ? "auto" : "smooth" });
+    setActiveChip(key);
+  }
+
+  // ================= карта (Leaflet, локально) =================
+  let LMAP = null, LLAYER = null, leafletLoading = null;
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    if (leafletLoading) return leafletLoading;
+    leafletLoading = new Promise((res, rej) => {
+      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "vendor/leaflet/leaflet.css"; document.head.appendChild(css);
+      const s = document.createElement("script"); s.src = "vendor/leaflet/leaflet.js"; s.onload = res; s.onerror = () => rej(new Error("карта не загрузилась")); document.head.appendChild(s);
+    });
+    return leafletLoading;
+  }
+  const geoCache = lsGet(K.geo) || {};
+  let geoBusy = false;
+  async function geocodeMissing() {
+    if (geoBusy || FORCE_DEMO) return; geoBusy = true;
+    const miss = MODEL.items.filter((r) => !r._ll).map(mapsQuery).filter((q) => q && !(q in geoCache)).filter((q, i, a) => a.indexOf(q) === i).slice(0, 8);
+    for (const q of miss) {
+      try {
+        const r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=ru&q=" + encodeURIComponent(q));
+        const j = await r.json(); geoCache[q] = j && j[0] ? [+j[0].lat, +j[0].lon] : null;
+      } catch (e) { break; }
+      lsSet(K.geo, geoCache); await new Promise((r) => setTimeout(r, 1100));
+    }
+    geoBusy = false; if (miss.length && state.view === "map") drawMap();
+  }
+  async function showMap() {
+    try { await loadLeaflet(); } catch (e) { $("map-note").textContent = "Карта не загрузилась. Проверьте подключение."; return; }
+    if (!LMAP) {
+      LMAP = L.map("map", { zoomControl: true, attributionControl: true });
+      const dark = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/" + (dark ? "dark_all" : "light_all") + "/{z}/{x}/{y}{r}.png",
+        { maxZoom: 19, subdomains: "abcd", attribution: "&copy; OpenStreetMap, &copy; CARTO" }).addTo(LMAP);
+    }
+    setTimeout(() => { LMAP.invalidateSize(); drawMap(); }, 30);
+    geocodeMissing();
+  }
+  function drawMap() {
+    if (!LMAP) return;
+    if (LLAYER) LLAYER.remove();
+    LLAYER = L.layerGroup().addTo(LMAP);
+    const pts = [], seen = {}, noCoords = [];
+    MODEL.days.forEach((d) => {
+      if (state.mapDay !== "all" && d.key !== state.mapDay) return;
+      d.list.forEach((r) => {
+        const ll = r._ll || geoCache[mapsQuery(r)];
+        if (!ll) { noCoords.push(r); return; }
+        const k = ll.join(","); pts.push(ll);
+        if (seen[k]) { seen[k].items.push(r); return; }
+        seen[k] = { ll, items: [r], day: d };
+      });
+    });
+    Object.values(seen).forEach((p) => {
+      const isToday = MODEL.todayDay === p.day;
+      const m = L.marker(p.ll, { icon: L.divIcon({ className: "", html: '<div class="pin' + (isToday ? " today" : "") + '">' + esc(p.day.n || "") + "</div>", iconSize: [30, 30], iconAnchor: [15, 15] }), keyboard: true, title: p.items[0]["Что"] });
+      m.bindPopup(p.items.map((r) => "<b>" + esc(r["Что"]) + "</b><br>" + esc(["День " + (p.day.n || p.day.key), r["Время"]].filter(Boolean).join(", ")) +
+        '<br><button type="button" data-open="' + r._i + '">Подробнее</button>').join("<hr>"));
+      m.addTo(LLAYER);
+    });
+    if (pts.length > 1) L.polyline(pts, { color: getComputedStyle(document.documentElement).getPropertyValue("--fir").trim() || "#173A33", weight: 2, opacity: .55, dashArray: "4 6" }).addTo(LLAYER);
+    if (pts.length) LMAP.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 15 }); else LMAP.setView([47.8, 13.5], 6);
+    $("map-note").textContent = (noCoords.length ? "Без координат: " + noCoords.length + ". " : "") + "Номер на метке — день поездки.";
+  }
+
+  // ================= карточка события =================
+  function openSheet(html, focusSel) {
+    lastFocus = document.activeElement;
+    $("sheet-body").innerHTML = html;
+    const sh = $("sheet"); sh.scrollTop = 0; sh.style.transform = "";
+    $("backdrop").classList.add("open"); sh.classList.add("open"); document.body.classList.add("locked");
+    if (!(history.state && history.state.sheet)) history.pushState({ sheet: 1 }, "");
+    setTimeout(() => { const el = (focusSel && $("sheet-body").querySelector(focusSel)) || sh.querySelector("button, a, input, textarea, select"); if (el) el.focus(); }, 260);
+  }
+  let lastFocus = null;
+  function closeSheet(fromPop) {
+    const sh = $("sheet"); if (!sh.classList.contains("open")) return;
+    $("backdrop").classList.remove("open"); sh.classList.remove("open"); document.body.classList.remove("locked"); sh.style.transform = "";
+    if (!fromPop && history.state && history.state.sheet) history.back();
+    if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus();
+  }
+  const sheetTop = (title) => '<div class="top title"><span class="grow" id="sheet-title">' + esc(title) + '</span><button class="iconbtn" type="button" data-close aria-label="Закрыть">' + icon("close") + "</button></div>";
+  (function swipe() {
+    let y0 = null, dy = 0; const sh = $("sheet");
+    sh.addEventListener("touchstart", (e) => { if (e.target.closest("input,textarea,select")) return; if (sh.scrollTop > 0 && !e.target.closest("#sheet-handle")) return; y0 = e.touches[0].clientY; dy = 0; sh.style.transition = "none"; }, { passive: true });
+    sh.addEventListener("touchmove", (e) => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); if (dy > 0) { sh.style.transform = "translateY(" + dy + "px)"; if (e.cancelable) e.preventDefault(); } }, { passive: false });
+    sh.addEventListener("touchend", () => { if (y0 == null) return; sh.style.transition = ""; if (dy > 90) closeSheet(); else sh.style.transform = ""; y0 = null; });
+  })();
+  function mapsQuery(r) {
+    const city = String(r["Город"] || "").split("→").pop().trim();
+    if (r["Адрес"]) return [r["Адрес"], city].filter(Boolean).join(", ");
+    if (["жильё", "жилье", "переезд"].includes(low(r["Тип"]))) return city;
+    return [r["Что"], city].filter(Boolean).join(", ");
+  }
+  function openEvent(i) {
+    const r = MODEL.items.find((x) => x._i === +i); if (!r) return;
+    const st = r["Статус"], stl = low(st), cost = num(r["Стоимость"]), link = safeUrl(r["Ссылка"]), q = mapsQuery(r);
+    const dest = r._ll ? r._ll.join(",") : q;
+    const when = [r._date ? cap(fmtLong(r._date)) : r["Дата"], r["Время"]].filter(Boolean).join(", ");
+    const facts = [];
+    if (cost) facts.push(["Стоимость", money(cost, (r["Валюта"] || "").toUpperCase())]);
+    if (r["Ответственный"]) facts.push(["Отвечает", r["Ответственный"]]);
+    if (r["Город"]) facts.push(["Город", r["Город"]]);
+    if (facts.length % 2) facts.push(["Тип", r["Тип"] || "—"]);
+    openSheet('<div class="top">' + icon(TYPE_ICON[low(r["Тип"])] || "t_other") + "<span>" + esc(r["Тип"] || "Событие") + '</span><span class="grow"></span>' +
+      (st ? '<span class="badge ' + (STATUS_CLASS[stl] || "") + '">' + esc(st) + "</span>" : "") + '<button class="iconbtn" type="button" data-close aria-label="Закрыть">' + icon("close") + "</button></div>" +
+      '<h3 id="sheet-title">' + esc(r["Что"] || "Без названия") + "</h3>" + (when ? '<div class="when">' + esc(when) + "</div>" : "") +
+      (r["Адрес"] ? '<div class="addr">' + esc(r["Адрес"]) + "</div>" : "") + (r["Подробности"] ? '<div class="details">' + esc(r["Подробности"]) + "</div>" : "") +
+      (facts.length ? '<div class="facts">' + facts.map(([k, v]) => '<div class="fact"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + "</div></div>").join("") + "</div>" : "") +
+      '<div class="actions">' + (dest ? '<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest) + '" target="_blank" rel="noopener">' + icon("nav") + "Проложить маршрут</a>" : "") +
+      (link ? '<a class="btn secondary" href="' + esc(link) + '" target="_blank" rel="noopener">' + icon("link") + "Открыть сайт</a>" : "") +
+      (r._min != null && r._date ? '<button class="btn secondary" type="button" data-ics-one="' + r._i + '">' + icon("cal") + "В календарь</button>" : "") +
+      (r["Адрес"] ? '<button class="btn secondary" type="button" data-copy="' + esc(q) + '">' + icon("copy") + "Скопировать адрес</button>" : "") +
+      (EDIT_URL ? '<a class="btn secondary" href="' + EDIT_URL + '" target="_blank" rel="noopener">' + icon("sheet") + "Изменить в таблице</a>" : "") + "</div>");
+  }
+
+  // ================= календарь (.ics) =================
+  const DUR = { "экскурсия": 120, "еда": 90, "отдых": 90, "переезд": 60, "жильё": 30, "жилье": 30 };
+  const icsEsc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  const icsDT = (d, min) => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "T" + pad(Math.floor(min / 60) % 24) + pad(min % 60) + "00";
+  function buildICS(list) {
+    const tz = CFG.TIMEZONE || "Europe/Vienna";
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//planner//trip//RU", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + icsEsc(MODEL.title),
+      "BEGIN:VTIMEZONE", "TZID:" + tz, "BEGIN:STANDARD", "DTSTART:19701025T030000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "TZNAME:CET", "END:STANDARD",
+      "BEGIN:DAYLIGHT", "DTSTART:19700329T020000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "TZNAME:CEST", "END:DAYLIGHT", "END:VTIMEZONE"];
+    list.forEach((r) => {
+      const dur = DUR[low(r["Тип"])] || 60;
+      const endMin = r._min + dur, endDate = endMin >= 1440 ? addDays(r._date, 1) : r._date;
+      L.push("BEGIN:VEVENT", "UID:" + toIso(r._date) + "-" + r._min + "-" + r._i + "@trip-planner", "DTSTAMP:" + stamp,
+        "DTSTART;TZID=" + tz + ":" + icsDT(r._date, r._min), "DTEND;TZID=" + tz + ":" + icsDT(endDate, endMin % 1440),
+        "SUMMARY:" + icsEsc(r["Что"]), "LOCATION:" + icsEsc(r["Адрес"] ? mapsQuery(r) : r["Город"] || ""),
+        "DESCRIPTION:" + icsEsc([r["Подробности"], r["Статус"] ? "Статус: " + r["Статус"] : ""].filter(Boolean).join("\n")));
+      if (safeUrl(r["Ссылка"])) L.push("URL:" + safeUrl(r["Ссылка"]));
+      L.push("BEGIN:VALARM", "TRIGGER:-PT30M", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(r["Что"]), "END:VALARM", "END:VEVENT");
+    });
+    L.push("END:VCALENDAR");
+    return L.map((l) => l.length > 74 ? l.match(/.{1,73}/g).join("\r\n ") : l).join("\r\n");
+  }
+  function downloadICS(list, name) {
+    if (!list.length) { toast("Нет событий со временем"); return; }
+    const blob = new Blob([buildICS(list)], { type: "text/calendar;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name + ".ics";
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    toast("Файл календаря готов: откройте его, чтобы добавить события");
+  }
+  function openIcsMenu() {
+    const timed = MODEL.items.filter((r) => r._min != null && r._date);
+    const planned = timed.filter((r) => low(r["Статус"]) !== "идея");
+    openSheet(sheetTop("Добавить в календарь") + '<p class="lead">События со временем попадут в календарь телефона с напоминанием за 30 минут.</p>' +
+      '<div class="actions"><button class="btn" type="button" data-ics="all">Все события (' + timed.length + ")</button>" +
+      '<button class="btn secondary" type="button" data-ics="planned"' + (planned.length ? "" : " disabled") + ">Без идей (" + planned.length + ")</button></div>");
+  }
+
+  // ================= бюджет =================
+  function sumPlan(rows) { let s = 0; rows.forEach((r) => { const n = num(r["Стоимость"]); if (n) s += n; }); return s; }
+  function sumBy(rows, keyFn, valFn) { const o = {}; rows.forEach((r) => { const k = keyFn(r) || "—", v = valFn(r); if (v) o[k] = (o[k] || 0) + v; }); return o; }
+  function renderBudget() {
+    document.querySelectorAll("#seg-budget button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.seg === state.seg)));
+    if (state.seg === "plan") renderPlan(); else renderFact();
+    updateFab();
+  }
+  function renderFact() {
+    const ex = MODEL.expenses, t = now(), cur = MODEL.currency;
+    if (!ex.length) { $("budget").innerHTML = '<div class="empty">Расходов пока нет.<br>' + (CAN_WRITE ? "Нажмите «Расход», чтобы записать первую трату." : "Записывайте траты во вкладку «" + esc(TABS.expenses) + "» таблицы или подключите запись с телефона (README, часть 2).") + "</div>"; return; }
+    const total = ex.reduce((s, r) => s + r._amt, 0);
+    const today = ex.filter((r) => r._date && sameDay(r._date, t)).reduce((s, r) => s + r._amt, 0);
+    const daysWith = new Set(ex.filter((r) => r._date).map((r) => toIso(r._date))).size || 1;
+    let html = '<div class="total"><div class="k">Потрачено</div><div class="v">' + esc(money(total)) + "</div>";
+    if (MODEL.budget) { const left = MODEL.budget - total, pct = Math.min(100, Math.round(total / MODEL.budget * 100));
+      html += '<div class="s">' + esc(left >= 0 ? "Осталось " + money(left) + " из " + money(MODEL.budget) : "Сверх бюджета на " + money(-left)) + '</div><div class="bar' + (left < 0 ? " over" : "") + '" role="img" aria-label="Израсходовано ' + pct + ' процентов бюджета"><i style="width:' + pct + '%"></i></div>'; }
+    html += "</div>";
+    html += '<div class="kpis"><div class="kpi"><div class="k">Сегодня</div><div class="v">' + esc(money(today)) + '</div></div><div class="kpi"><div class="k">В среднем за день</div><div class="v">' + esc(money(Math.round(total / daysWith))) + "</div></div></div>";
+    html += dailyChart(ex);
+    const byCat = sumBy(ex, (r) => r["Категория"] || "Другое", (r) => r._amt), catKeys = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]), max = Math.max(...Object.values(byCat), 1);
+    html += '<div class="list"><h3>По категориям</h3><div class="items">' + catKeys.map((k) => '<div class="r"><span class="l">' + esc(k) + '<span class="meter" aria-hidden="true"><i style="width:' + Math.round(byCat[k] / max * 100) + '%"></i></span></span><span class="n">' + esc(money(byCat[k])) + "</span></div>").join("") + "</div></div>";
+    const groups = new Map();
+    ex.slice().sort((a, b) => (b._date || 0) - (a._date || 0)).forEach((r) => { const k = r._date ? toIso(r._date) : "—"; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+    groups.forEach((rows) => {
+      const d = rows[0]._date, s = rows.reduce((a, r) => a + r._amt, 0);
+      html += '<div class="group-head"><span>' + esc(d ? cap(fmtLong(d)) : "Без даты") + "</span><span>" + esc(money(s)) + '</span></div><div class="list"><div class="items">' +
+        rows.slice().reverse().map((r) => '<button type="button" class="r" data-exp="' + esc(r.ID || "") + '"><span class="l">' + esc(r["Описание"] || r["Категория"] || "Расход") +
+          "<small>" + esc([r["Описание"] ? r["Категория"] : "", r["Добавил"]].filter(Boolean).join(", ")) + (r._pending ? ' <span class="badge wait">ждёт отправки</span>' : "") + '</small></span><span class="n">' + esc(money(r._amt, r._cur)) + "</span></button>").join("") + "</div></div>";
+    });
+    $("budget").innerHTML = html;
+  }
+  function dailyChart(ex) {
+    if (!MODEL.start || !MODEL.end) return "";
+    const n = dayDiff(MODEL.end, MODEL.start) + 1; if (n < 1 || n > 31) return "";
+    const buckets = []; let before = 0;
+    for (let i = 0; i < n; i++) buckets.push({ d: addDays(MODEL.start, i), v: 0 });
+    ex.forEach((r) => { if (!r._date) return; const i = dayDiff(r._date, MODEL.start); if (i < 0) before += r._amt; else if (i < n) buckets[i].v += r._amt; });
+    if (before) buckets.unshift({ d: null, v: before, label: "до" });
+    const max = Math.max(...buckets.map((b) => b.v), 1), t = now();
+    const peak = buckets.reduce((a, b) => (b.v > a.v ? b : a), buckets[0]);
+    const sel = state.bar;
+    const bars = buckets.map((b, i) => {
+      const h = Math.round(b.v / max * 100), isT = b.d && sameDay(b.d, t), show = b.v && (b === peak || isT || sel === i);
+      const name = b.d ? fmtDM(b.d) : "до поездки";
+      return '<button type="button" data-bar="' + i + '" aria-pressed="' + (sel === i) + '" aria-label="' + esc(name + ": " + money(b.v)) + '">' +
+        (show ? '<span class="val" style="bottom:calc(' + h + '% + 4px)">' + esc(fmtNum(Math.round(b.v))) + "</span>" : "") +
+        '<span class="col' + (b.v ? "" : " zero") + '" style="height:' + h + '%"></span></button>';
+    }).join("");
+    const axis = buckets.map((b) => '<span class="' + (b.d && sameDay(b.d, t) ? "today" : "") + '">' + (b.d ? b.d.getDate() : "до") + "</span>").join("");
+    return '<div class="chart"><h3>По дням, ' + esc(MODEL.currency) + '</h3><div class="bars">' + bars + '</div><div class="axis" aria-hidden="true">' + axis + "</div></div>";
+  }
+  function renderPlan() {
+    const rows = MODEL.items, total = sumPlan(rows);
+    if (!total) { $("budget").innerHTML = '<div class="empty">Плановых сумм пока нет.<br>Заполните столбец «Стоимость» во вкладке «' + esc(TABS.itinerary) + '».</div>'; return; }
+    const byStatus = sumBy(rows, (r) => r["Статус"] || "Без статуса", (r) => num(r["Стоимость"]));
+    const fixed = (byStatus["Оплачено"] || 0) + (byStatus["Забронировано"] || 0), n = MODEL.people.length;
+    const list = (title, obj, order) => { const keys = order ? order.filter((k) => obj[k]).concat(Object.keys(obj).filter((k) => !order.includes(k))) : Object.keys(obj).sort((a, b) => obj[b] - obj[a]);
+      return '<div class="list"><h3>' + esc(title) + '</h3><div class="items">' + keys.map((k) => '<div class="r"><span class="l">' + esc(k) + '</span><span class="n">' + esc(money(obj[k])) + "</span></div>").join("") + "</div></div>"; };
+    $("budget").innerHTML = '<div class="total"><div class="k">Всего по плану</div><div class="v">' + esc(money(total)) + "</div>" + (n > 1 ? '<div class="s">' + esc(money(Math.round(total / n))) + " на человека</div>" : "") + "</div>" +
+      '<div class="kpis"><div class="kpi"><div class="k">Забронировано</div><div class="v">' + esc(money(fixed)) + '</div></div><div class="kpi"><div class="k">Ещё не решено</div><div class="v">' + esc(money(total - fixed)) + "</div></div></div>" +
+      list("По статусу", byStatus, STATUS_ORDER) + list("По типу", sumBy(rows, (r) => r["Тип"] || "Другое", (r) => num(r["Стоимость"])));
+  }
+
+  // ================= формы =================
+  function needWrite(msg) {
+    if (!CAN_WRITE) { toast("Запись с телефона не подключена"); return false; }
+    if (!FORCE_DEMO && !user.code) { openSettings(msg); return false; }
+    return true;
+  }
+  function openExpenseForm() {
+    if (!needWrite("Чтобы записывать расходы, укажите семейный код.")) return;
+    const lastCat = lsGet("planner-last-cat") || "";
+    openSheet(sheetTop("Новый расход") +
+      '<label class="fld"><span>Сумма</span><div class="amount"><input class="inp" id="f-amount" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="next" aria-describedby="f-err"><span class="cur">' + esc(MODEL.currency) + "</span></div></label>" +
+      '<div class="fld" role="group" aria-label="Категория"><span>Категория</span><div class="cats" id="f-cats">' + EXP_CATS.map((c) => '<button type="button" class="chip" data-cat="' + esc(c) + '" aria-pressed="' + (c === lastCat) + '">' + esc(c) + "</button>").join("") + "</div></div>" +
+      '<label class="fld"><span>Описание</span><input class="inp" id="f-note" placeholder="Необязательно" maxlength="120" autocomplete="off" enterkeyhint="done"></label>' +
+      '<label class="fld"><span>Дата</span><input class="inp" id="f-date" type="date" value="' + toIso(now()) + '"></label>' +
+      '<div class="err" id="f-err" aria-live="polite"></div><div class="actions"><button class="btn" type="button" data-save-expense>Записать расход</button></div>', "#f-amount");
+  }
+  function saveExpense() {
+    const amount = num($("f-amount").value);
+    if (!amount || amount <= 0) { $("f-err").textContent = "Введите сумму больше нуля"; $("f-amount").setAttribute("aria-invalid", "true"); $("f-amount").focus(); return; }
+    const sel = $("f-cats").querySelector('[aria-pressed="true"]'), category = sel ? sel.dataset.cat : "Другое";
+    lsSet("planner-last-cat", category);
+    const d = parseDate($("f-date").value) || now();
+    if (submit("addExpense", { id: uid(), amount: Math.round(amount * 100) / 100, currency: MODEL.currency, category, note: $("f-note").value.trim(), date: toRu(d), author: user.name })) { closeSheet(); toast("Расход записан"); }
+  }
+  function openExpense(id) {
+    const r = MODEL.expenses.find((x) => x.ID === id); if (!r) return;
+    openSheet(sheetTop(r["Описание"] || r["Категория"] || "Расход") +
+      '<div class="facts"><div class="fact"><div class="k">Сумма</div><div class="v">' + esc(money(r._amt, r._cur)) + '</div></div><div class="fact"><div class="k">Категория</div><div class="v">' + esc(r["Категория"] || "—") + "</div></div>" +
+      '<div class="fact"><div class="k">Дата</div><div class="v">' + esc(r._date ? fmtDM(r._date) : r["Дата"] || "—") + '</div></div><div class="fact"><div class="k">Записал</div><div class="v">' + esc(r["Добавил"] || "—") + "</div></div></div>" +
+      '<div class="actions">' + (CAN_WRITE && r.ID ? '<button class="btn danger" type="button" data-del-expense="' + esc(r.ID) + '">' + icon("trash") + "<span>Удалить расход</span></button>" : "") + "</div>");
+  }
+  function openIdeaForm() {
+    if (!needWrite("Чтобы добавлять идеи, укажите семейный код.")) return;
+    openSheet(sheetTop("Новая идея") + '<label class="fld"><span>Идея</span><textarea class="inp" id="f-idea" maxlength="300" placeholder="Например: каток на Ратушной площади" aria-describedby="f-err"></textarea></label>' +
+      '<label class="fld"><span>Комментарий</span><input class="inp" id="f-comment" maxlength="300" placeholder="Необязательно" autocomplete="off"></label>' +
+      '<div class="err" id="f-err" aria-live="polite"></div><div class="actions"><button class="btn" type="button" data-save-idea>Добавить идею</button></div>', "#f-idea");
+  }
+  function saveIdea() {
+    const idea = $("f-idea").value.trim();
+    if (!idea) { $("f-err").textContent = "Напишите идею"; $("f-idea").setAttribute("aria-invalid", "true"); return; }
+    if (submit("addIdea", { id: uid(), idea, comment: $("f-comment").value.trim(), author: user.name })) { closeSheet(); toast("Идея добавлена"); }
+  }
+  function openSettings(lead) {
+    openSheet(sheetTop("Настройки") + (lead ? '<p class="lead">' + esc(lead) + "</p>" : "") +
+      '<label class="fld"><span>Ваше имя</span><input class="inp" id="s-name" value="' + esc(user.name) + '" placeholder="Например: Егор" autocomplete="off" maxlength="40" list="s-people"></label>' +
+      '<datalist id="s-people">' + (MODEL ? MODEL.people.map((p) => "<option>" + esc(p) + "</option>").join("") : "") + "</datalist>" +
+      '<label class="fld"><span>Семейный код</span><input class="inp" id="s-code" value="' + esc(user.code) + '" placeholder="Код от владельца таблицы" autocomplete="off" autocapitalize="off" maxlength="60"></label>' +
+      '<p class="hint">' + (FORCE_DEMO ? "Демо-режим: изменения не отправляются в таблицу." : SCRIPT ? "Запись с телефона подключена." : "Запись с телефона не подключена: в config.js нет SCRIPT_URL. Сайт работает на просмотр.") +
+      (queue.length ? " Не отправлено изменений: " + queue.length + "." : "") + '</p><div class="err" id="s-err" aria-live="polite"></div>' +
+      '<div class="actions"><button class="btn" type="button" data-save-settings>Сохранить</button>' + (SCRIPT && !FORCE_DEMO ? '<button class="btn secondary" type="button" data-check-code>Проверить код</button>' : "") + "</div>", user.name ? "#s-code" : "#s-name");
+  }
+  async function checkCode() {
+    const code = $("s-code").value.trim(); $("s-err").textContent = "Проверяю…";
+    try { await api("ping", {}, code); $("s-err").textContent = ""; toast("Код подходит"); }
+    catch (e) { $("s-err").textContent = e.auth ? "Код не подходит" : "Не удалось проверить: " + e.message; }
+  }
+  function saveSettings() { user = { name: $("s-name").value.trim(), code: $("s-code").value.trim() }; lsSet(K.user, user); closeSheet(); toast("Настройки сохранены"); banner("", ""); renderAll(); flush(); }
+
+  // ================= подготовка: дела и вещи =================
+  function renderPrep() {
+    document.querySelectorAll("#seg-prep button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.prep === state.prep)));
+    if (state.prep === "pack") renderPack(); else renderTasks();
+  }
+  function renderTasks() {
+    const rows = MODEL.tasks.filter((r) => r["Дело"]), t = now();
+    if (!rows.length) { $("prep").innerHTML = '<div class="empty">Дел пока нет. Добавьте их во вкладку «' + esc(TABS.tasks) + '» таблицы.</div>'; return; }
+    const items = rows.map((r) => Object.assign(r, { _due: parseDate(r["До"]), _done: isYes(r["Готово"]) }));
+    const open = items.filter((r) => !r._done).sort((a, b) => (a._due || 9e15) - (b._due || 9e15)), done = items.filter((r) => r._done);
+    const late = open.filter((r) => r._due && dayDiff(r._due, t) < 0), rest = open.filter((r) => !(r._due && dayDiff(r._due, t) < 0));
+    const tag = CAN_WRITE ? "button" : "div";
+    const row = (r) => {
+      let due = "", cls = "";
+      if (r._due) { const dd = dayDiff(r._due, t);
+        if (r._done) due = "до " + fmtDMs(r._due);
+        else if (dd < 0) { due = "просрочено на " + days(-dd); cls = "late"; }
+        else if (dd === 0) { due = "сегодня"; cls = "late"; }
+        else if (dd <= 7) { due = "через " + days(dd); cls = "soon"; }
+        else due = "до " + fmtDMs(r._due); }
+      return "<" + tag + (CAN_WRITE ? ' type="button" data-task="' + esc(r["Дело"]) + '" aria-pressed="' + r._done + '"' : ' aria-label="' + esc(r["Дело"] + (r._done ? ", сделано" : "")) + '"') + ' class="check">' +
+        '<span class="box">' + (r._done ? icon("check") : "") + '</span><span class="name">' + esc(r["Дело"]) +
+        "<small>" + (due ? '<span class="due ' + cls + '">' + esc(due) + "</span>" : "") + (due && r["Кто"] ? ", " : "") + esc(r["Кто"] || "") + (r._pending ? ' <span class="badge wait">ждёт</span>' : "") + "</small>" +
+        (r["Заметка"] ? "<small>" + esc(r["Заметка"]) + "</small>" : "") + "</span></" + tag + ">" +
+        (safeUrl(r["Ссылка"]) && !r._done ? '<div class="row-acts" style="margin:-2px 0 8px 48px"><a href="' + esc(safeUrl(r["Ссылка"])) + '" target="_blank" rel="noopener">Открыть сайт</a></div>' : "");
+    };
+    let html = '<div>Сделано ' + done.length + " из " + items.length + '</div><div class="bar" role="img" aria-label="Сделано ' + done.length + " из " + items.length + '"><i style="width:' + Math.round(done.length / items.length * 100) + '%"></i></div>';
+    if (late.length) html += '<div class="group-head"><span>Просрочено</span><span>' + late.length + "</span></div>" + late.map(row).join("");
+    if (rest.length) html += '<div class="group-head"><span>Предстоит</span><span>' + rest.length + "</span></div>" + rest.map(row).join("");
+    if (done.length) html += '<div class="group-head"><span>Готово</span><span>' + done.length + "</span></div>" + done.map(row).join("");
+    html += '<p class="hint">' + (CAN_WRITE ? "Нажмите на дело, чтобы отметить его сделанным." : "Отметка ставится в таблице: «Да» в столбце «Готово».") + "</p>";
+    $("prep").innerHTML = html;
+  }
+  function renderPack() {
+    const rows = MODEL.packing.filter((r) => r["Вещь"]);
+    if (!rows.length) { $("prep").innerHTML = '<div class="empty">Список пуст. Заполните вкладку «' + esc(TABS.packing) + '».</div>'; return; }
+    const done = rows.filter((r) => isYes(r["Взято"])).length, groups = {};
+    rows.forEach((r) => { const g = r["Категория"] || "Разное"; (groups[g] = groups[g] || []).push(r); });
+    const tag = CAN_WRITE ? "button" : "div";
+    let html = "<div>Собрано " + done + " из " + rows.length + '</div><div class="bar" role="img" aria-label="Собрано ' + done + " из " + rows.length + '"><i style="width:' + Math.round(done / rows.length * 100) + '%"></i></div>';
+    Object.keys(groups).forEach((g) => {
+      html += '<div class="group-head"><span>' + esc(g) + "</span></div>";
+      groups[g].forEach((r) => { const ok = isYes(r["Взято"]);
+        html += "<" + tag + (CAN_WRITE ? ' type="button" data-pack="' + esc(r["Вещь"]) + '" aria-pressed="' + ok + '"' : "") + ' class="check"><span class="box">' + (ok ? icon("check") : "") + '</span><span class="name">' + esc(r["Вещь"]) + "</span>" +
+          '<span class="side">' + esc(r["Кто берёт"] || "") + (r._pending ? ' <span class="badge wait">ждёт</span>' : "") + "</span></" + tag + ">"; });
+    });
+    html += '<p class="hint">' + (CAN_WRITE ? "Нажмите на вещь, чтобы отметить её собранной. Отметку видят все." : "Отметка ставится в таблице: «Да» в столбце «Взято».") + "</p>";
+    $("prep").innerHTML = html;
+  }
+
+  // ================= идеи и голоса =================
+  function renderIdeas() {
+    const rows = MODEL.ideas.filter((r) => r["Идея"]).map((r, i) => Object.assign(r, { _v: voters(r["Голоса"]), _o: i }));
+    rows.sort((a, b) => b._v.length - a._v.length || a._o - b._o);
+    const me = low(user.name);
+    $("ideas").innerHTML = (rows.length ? rows.map((r) => {
+      const mine = !!me && r._v.some((v) => low(v) === me);
+      return '<div class="idea"><div class="txt"><div class="t">' + esc(r["Идея"]) + "</div>" + (r["Комментарий"] ? '<div class="c">' + esc(r["Комментарий"]) + "</div>" : "") +
+        '<div class="a">' + esc([r["Автор"] ? "Предложил: " + r["Автор"] : "", r._v.length ? "За: " + r._v.join(", ") : ""].filter(Boolean).join(". ")) + (r._pending ? ' <span class="badge wait">ждёт отправки</span>' : "") + "</div></div>" +
+        (CAN_WRITE ? '<button type="button" class="vote" data-vote="' + esc(r["Идея"]) + '" aria-pressed="' + mine + '" aria-label="' + esc((mine ? "Убрать голос за: " : "Голосовать за: ") + r["Идея"] + ". Голосов: " + r._v.length) + '">' + icon("heart") + "<b>" + r._v.length + "</b></button>"
+          : '<span class="vote" aria-label="Голосов: ' + r._v.length + '">' + icon("heart") + "<b>" + r._v.length + "</b></span>") + "</div>";
+    }).join("") : '<div class="empty">Идей пока нет.</div>') + (CAN_WRITE ? '<p class="hint">Отметьте понравившиеся идеи — популярные поднимаются наверх.</p>' : '<p class="hint">Идеи добавляются во вкладке «' + esc(TABS.ideas) + '» таблицы.</p>');
+    updateFab();
+  }
+  function updateFab() {
+    const f = $("fab");
+    if (CAN_WRITE && state.tab === "p-budget" && state.seg === "fact") { f.innerHTML = icon("plus") + "Расход"; f.dataset.act = "expense"; f.hidden = false; }
+    else if (CAN_WRITE && state.tab === "p-ideas") { f.innerHTML = icon("plus") + "Идея"; f.dataset.act = "idea"; f.hidden = false; }
+    else f.hidden = true;
+  }
+
+  // ================= общее =================
+  function renderAll() {
+    if (!DATA) return;
+    buildModel(); renderHeader(); renderNow(); renderStrip(); renderFilters(); renderRoute(); renderBudget(); renderPrep(); renderIdeas(); renderPending();
+    const t = DATA.loadedAt ? new Date(DATA.loadedAt).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+    $("updated").textContent = DATA.demo ? "Демонстрационные данные" : (t ? "Данные от " + t : "");
+  }
+  function banner(kind, html) { $("banner").innerHTML = html ? '<div class="banner ' + kind + '">' + html + "</div>" : ""; }
+  let toastT;
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("show"), 2400); }
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); } catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e2) {} ta.remove(); }
+    toast("Адрес скопирован");
+  }
+  let busy = false, first = true;
+  async function refresh(manual) {
+    if (busy) return; busy = true; $("refresh").classList.add("spin");
+    try {
+      const data = await loadAll(); DATA = data;
+      if (!data.demo) lsSet(K.cache, data);
+      renderAll();
+      if (data.demo) banner("info", "Показаны демонстрационные данные." + (CFG.SHEET_ID ? "" : " Укажите SHEET_ID в config.js."));
+      else if (data.warnings && data.warnings.length) banner("warn", "Часть данных не загрузилась: " + esc(data.warnings.join("; ")) + ".");
+      else if (!$("banner").textContent.includes("код")) banner("", "");
+      if (manual) toast("Данные обновлены");
+    } catch (err) {
+      const cached = lsGet(K.cache); if (cached && !DATA) { DATA = cached; renderAll(); }
+      const off = navigator.onLine === false;
+      banner("warn", (off ? "Нет подключения к интернету." : "Не удалось загрузить таблицу: " + esc(err.message) + ".") + (DATA ? " Показана сохранённая версия." : "") + (!off ? " Проверьте, что доступ к таблице открыт по ссылке (роль «Читатель»)." : ""));
+    } finally {
+      busy = false; $("refresh").classList.remove("spin");
+      if (first && DATA) { first = false; if (MODEL.todayDay) setActiveChip(MODEL.todayDay.key); flush(); }
+    }
+  }
+
+  // ================= вкладки =================
+  const TAB_DEF = [["p-route", "route", "Маршрут"], ["p-budget", "wallet", "Бюджет"], ["p-prep", "bag", "Подготовка"], ["p-ideas", "idea", "Идеи"]];
+  $("tabs").innerHTML = TAB_DEF.map(([id, ic, l]) => '<button type="button" data-panel="' + id + '" id="t-' + id.slice(2) + '">' + icon(ic) + "<span>" + l + "</span></button>").join("");
+  function showTab(id) {
+    if (!document.getElementById(id)) id = "p-route";
+    const changed = state.tab !== id || !document.getElementById(id).classList.contains("active");
+    state.tab = id; lsSet("planner-tab", id);
+    document.querySelectorAll("#tabs button").forEach((b) => { if (b.dataset.panel === id) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+    document.querySelectorAll("section.panel").forEach((p) => p.classList.toggle("active", p.id === id));
+    document.querySelector(".hero").hidden = id !== "p-route";
+    updateFab();
+    if (changed) window.scrollTo({ top: 0 });
+    if (id === "p-route" && state.view === "map" && LMAP) setTimeout(() => LMAP.invalidateSize(), 30);
+  }
+  showTab(state.tab);
+
+  // ================= события =================
+  $("refresh").innerHTML = icon("refresh"); $("edit-link").innerHTML = icon("sheet"); $("settings").innerHTML = icon("gear");
+  if (EDIT_URL) $("edit-link").href = EDIT_URL; else $("edit-link").hidden = true;
+  $("refresh").addEventListener("click", () => { refresh(true); flush(); });
+  document.addEventListener("click", (e) => {
+    const at = (s) => e.target.closest(s); let el;
+    if ((el = at("#tabs button"))) return showTab(el.dataset.panel);
+    if ((el = at("[data-view]"))) { state.view = el.dataset.view; state.mapDay = "all"; renderStrip(); renderRoute();
+      if (state.view === "map") $("route-view").scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" }); return; }
+    if (at("[data-past]")) { state.showPast = !state.showPast; renderRoute(); return; }
+    if ((el = at("[data-goto]"))) { if (el.dataset.goto === "all") { state.mapDay = "all"; renderStrip(); showMap(); return; } return gotoDay(el.dataset.goto); }
+    if ((el = at("[data-open]"))) { if (LMAP) LMAP.closePopup(); return openEvent(el.dataset.open); }
+    if ((el = at("[data-f]"))) { state.filter = el.dataset.f; lsSet("planner-filter", state.filter); renderFilters(); renderRoute(); return; }
+    if ((el = at("[data-seg]"))) { state.seg = el.dataset.seg; lsSet("planner-seg", state.seg); renderBudget(); return; }
+    if ((el = at("[data-prep]"))) { state.prep = el.dataset.prep; lsSet("planner-prep", state.prep); renderPrep(); return; }
+    if ((el = at("[data-bar]"))) { const i = +el.dataset.bar; state.bar = state.bar === i ? null : i; renderBudget(); const b = document.querySelector('[data-bar="' + i + '"]'); if (b) b.focus(); return; }
+    if (at("[data-close]") || e.target === $("backdrop")) return closeSheet();
+    if ((el = at("[data-copy]"))) return copy(el.dataset.copy);
+    if (at("[data-settings]")) return openSettings();
+    if (at("[data-save-settings]")) return saveSettings();
+    if (at("[data-check-code]")) return checkCode();
+    if ((el = at("#fab"))) return el.dataset.act === "idea" ? openIdeaForm() : openExpenseForm();
+    if ((el = at("[data-cat]"))) { $("f-cats").querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === el))); return; }
+    if (at("[data-save-expense]")) return saveExpense();
+    if ((el = at("[data-exp]"))) return openExpense(el.dataset.exp);
+    if ((el = at("[data-del-expense]"))) {
+      if (!el.dataset.confirm) { el.dataset.confirm = "1"; el.querySelector("span").textContent = "Нажмите ещё раз, чтобы удалить"; return; }
+      if (submit("deleteExpense", { id: el.dataset.delExpense })) { closeSheet(); toast("Расход удалён"); } return;
+    }
+    if (at("[data-save-idea]")) return saveIdea();
+    if ((el = at("[data-vote]"))) { if (!user.name && !FORCE_DEMO) return openSettings("Чтобы голосовать, укажите своё имя."); return submit("voteIdea", { idea: el.dataset.vote, name: user.name || "Я", on: el.getAttribute("aria-pressed") !== "true" }); }
+    if ((el = at("[data-pack]"))) return submit("setPacked", { item: el.dataset.pack, done: el.getAttribute("aria-pressed") !== "true" });
+    if ((el = at("[data-task]"))) return submit("setTask", { task: el.dataset.task, done: el.getAttribute("aria-pressed") !== "true" });
+    if (at("[data-ics-menu]")) return openIcsMenu();
+    if ((el = at("[data-ics]"))) { const timed = MODEL.items.filter((r) => r._min != null && r._date); downloadICS(el.dataset.ics === "planned" ? timed.filter((r) => low(r["Статус"]) !== "идея") : timed, "poezdka"); return closeSheet(); }
+    if ((el = at("[data-ics-one]"))) { const r = MODEL.items.find((x) => x._i === +el.dataset.icsOne); if (r) downloadICS([r], "sobytie"); return; }
+  });
+  document.addEventListener("keydown", (e) => {
+    const sh = $("sheet");
+    if (e.key === "Escape") return closeSheet();
+    if (e.key === "Enter" && e.target.id === "f-amount") { e.preventDefault(); $("f-note").focus(); }
+    if (e.key === "Tab" && sh.classList.contains("open")) {           // удерживаем фокус внутри карточки
+      const f = [...sh.querySelectorAll("button, a[href], input, textarea, select")].filter((x) => !x.disabled && x.offsetParent !== null);
+      if (!f.length) return; const a = f[0], z = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+    }
+  });
+  window.addEventListener("scroll", () => $("appbar").classList.toggle("scrolled", window.scrollY > 4), { passive: true });
+  window.addEventListener("popstate", () => closeSheet(true));
+  window.addEventListener("online", () => { flush(); refresh(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && !FORCE_DEMO) { refresh(); flush(); } });
+  if (!FORCE_DEMO && CFG.REFRESH_SECONDS > 0) setInterval(() => { if (!document.hidden && !$("sheet").classList.contains("open")) refresh(); }, CFG.REFRESH_SECONDS * 1000);
+  setInterval(() => { if (DATA && MODEL && MODEL.todayDay) renderNow(); }, 60000);
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+
+  refresh();
+})();
+</script>
+</body>
+</html>
