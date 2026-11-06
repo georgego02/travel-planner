@@ -1,6 +1,6 @@
 // Service worker: позволяет открыть сайт без интернета и установить его на экран телефона.
 // Стратегия «сначала сеть»: свежая версия, если сеть есть; сохранённая — если нет.
-const CACHE = "planner-v10";
+const CACHE = "planner-v11";
 const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
