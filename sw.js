@@ -1,8 +1,8 @@
 // Service worker: позволяет открыть сайт без интернета и установить его на экран телефона.
 // Стратегия «сначала сеть»: свежая версия, если сеть есть; сохранённая — если нет.
-const CACHE = "planner-v7";
+const CACHE = "planner-v8";
 const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest",
-  "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png",
+  "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png",
   "vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css",
   "fonts/fira-sans-cyrillic-400-normal.woff2", "fonts/fira-sans-latin-400-normal.woff2",
   "fonts/fira-sans-cyrillic-500-normal.woff2", "fonts/fira-sans-latin-500-normal.woff2",
