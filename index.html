@@ -324,7 +324,9 @@
   .opt-list .t { font: 700 calc(17px * var(--fs)) var(--cond); font-variant-numeric: tabular-nums; }
   .opt-list li.moved { background: var(--fir-soft); }
   .opt-list li.fixed .w { color: var(--slate); }
-  .linkbtn { border: 0; background: none; padding: 0 2px; min-height: 44px; color: var(--wine); font-size: calc(15px * var(--fs)); text-decoration: underline; text-underline-offset: 3px; }
+  .idea { flex-wrap: wrap; }
+  .idea-links { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; margin-top: -2px; }
+  .idea-links .btn { min-height: 44px; font-size: calc(15px * var(--fs)); padding: 0 12px; flex: 0 0 auto; }
   .day-tools { margin: 0 0 6px; }
   .day-tools .btn { min-height: 44px; font-size: calc(15px * var(--fs)); display: inline-flex; flex: none; }
   /* ---------- часы работы ---------- */
@@ -632,7 +634,6 @@
     if (op.action === "addGift" && d.gifts) d.gifts.push({ "Кому": x.to, "Что": x.what, "Бюджет": x.budget, "Где купить": x.where, "Кто покупает": x.who, "Куплено": "Нет", _pending: pending });
     if (op.action === "setGift" && d.gifts) { const r = d.gifts.find((r) => low(r["Что"]) === low(x.what) && low(r["Кому"]) === low(x.to)); if (r) { r["Куплено"] = x.done ? "Да" : "Нет"; r._pending = pending; } }
     if (op.action === "setBooking" && d.bookings) { const r = d.bookings.find((r) => low(r["Что"]) === low(x.what)); if (r) { r["Статус"] = x.status; r._pending = pending; } }
-    if (op.action === "deleteIdea") d.ideas = d.ideas.filter((r) => low(r["Идея"]) !== low(x.idea));
     if (op.action === "setTimes" && d.itinerary) (x.items || []).forEach((it) => {
       const r = d.itinerary.find((r) => low(r["Что"]) === low(it.what) && (String(r["День"] || "").trim() === String(it.day || "").trim() || (it.date && String(r["Дата"] || "").trim() === String(it.date).trim())));
       if (r) { r["Время"] = it.time; r._pending = pending; }
@@ -1109,7 +1110,7 @@
   const cityOf = (r) => String(r["Город"] || "").split("→").pop().trim();
   function placeName(r) {
     let n = String(r["Что"] || "").split(/[:«(,]/)[0];
-    n = n.replace(/^(обед|ужин|завтрак|кофе|торт|десерт|венский шницель|шницель|прогулка|подъём|подъем|посещение|экскурсия|огни)\s+(в|во|на|по|у)?\s*/i, "");
+    n = n.replace(/^(обед|ужин|завтрак|вечер|кофе|торт|десерт|венский шницель|шницель|прогулка|подъём|подъем|посещение|экскурсия|огни)\s+(в|во|на|по|у)?\s*/i, "");
     return n.replace(/\s+или\s+.*$/i, "").trim() || String(r["Что"] || "").trim();
   }
   async function wikiQuery(params) {
@@ -1506,16 +1507,21 @@
       const mine = !!me && r._v.some((v) => low(v) === me);
       return '<div class="idea"><div class="txt"><div class="t">' + esc(r["Идея"]) + "</div>" + (r["Комментарий"] ? '<div class="c">' + esc(r["Комментарий"]) + "</div>" : "") +
         '<div class="a">' + esc([r["Автор"] ? "Предложил: " + r["Автор"] : "", r._v.length ? "За: " + r._v.join(", ") : ""].filter(Boolean).join(". ")) + (r._pending ? ' <span class="badge wait">ждёт отправки</span>' : "") + "</div>" +
-        (CAN_WRITE ? '<button type="button" class="linkbtn" data-del-idea="' + esc(r["Идея"]) + '" aria-label="' + esc("Удалить идею: " + r["Идея"]) + '">Удалить</button>' : "") + "</div>" +
+        "</div>" +
         (CAN_WRITE ? '<button type="button" class="vote" data-vote="' + esc(r["Идея"]) + '" aria-pressed="' + mine + '" aria-label="' + esc((mine ? "Убрать голос за: " : "Голосовать за: ") + r["Идея"] + ". Голосов: " + r._v.length) + '">' + icon("heart") + "<b>" + r._v.length + "</b></button>"
-          : '<span class="vote" aria-label="Голосов: ' + r._v.length + '">' + icon("heart") + "<b>" + r._v.length + "</b></span>") + "</div>";
-    }).join("") : '<div class="empty">Идей пока нет.</div>') + (CAN_WRITE ? '<p class="hint">Отметьте понравившиеся идеи — популярные поднимаются наверх.</p>' : '<p class="hint">Идеи добавляются во вкладке «' + esc(TABS.ideas) + '» таблицы.</p>');
+          : '<span class="vote" aria-label="Голосов: ' + r._v.length + '">' + icon("heart") + "<b>" + r._v.length + "</b></span>") + ideaLinks(r) + "</div>";
+    }).join("") : '<div class="empty">Идей пока нет.</div>') + '<p class="hint">' + (CAN_WRITE ? "Отметьте понравившиеся идеи — популярные поднимаются наверх. " : "Идеи добавляются во вкладке «" + esc(TABS.ideas) + "» таблицы. ") + "Поправить или удалить идею можно в таблице, вкладка «" + esc(TABS.ideas) + "».</p>";
     updateFab();
   }
-  function confirmDeleteIdea(idea) {
-    if (!needWrite("Чтобы удалять идеи, укажите семейный код.")) return;
-    openSheet(sheetTop("Удалить идею?") + '<p class="lead" style="font-size:17px;color:var(--ink)">«' + esc(idea) + '»</p><p class="hint">Идея исчезнет у всех вместе с голосами. Вернуть можно только вручную в таблице.</p>' +
-      '<div class="actions"><button class="btn" type="button" data-del-idea-ok="' + esc(idea) + '">' + icon("trash") + 'Удалить</button><button class="btn secondary" type="button" data-close>Отмена</button></div>', "[data-close]");
+  // Википедия и видео для идеи: точная статья из столбца «Вики», иначе поиск; свой сайт — из столбца «Ссылка»
+  function ideaLinks(r) {
+    const q = placeName({ "Что": r["Идея"] });
+    const title = String(r["Вики"] || "").trim();
+    const wiki = title ? "https://ru.wikipedia.org/wiki/" + encodeURIComponent(title.replace(/ /g, "_")) : "https://ru.wikipedia.org/w/index.php?search=" + encodeURIComponent(q);
+    const video = "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+    const site = safeUrl(r["Ссылка"]);
+    const a = (href, ic, label, aria) => '<a class="btn secondary" href="' + esc(href) + '" target="_blank" rel="noopener" aria-label="' + esc(aria + ": " + r["Идея"]) + '">' + icon(ic) + label + "</a>";
+    return '<div class="idea-links">' + a(wiki, "link", "Википедия", "Википедия") + a(video, "play", "Видео", "Видео") + (site ? a(site, "link", "Сайт", "Сайт") : "") + "</div>";
   }
   function updateFab() {
     const f = $("fab");
@@ -1608,8 +1614,6 @@
       if (submit("deleteExpense", { id: el.dataset.delExpense })) { closeSheet(); toast("Расход удалён"); } return;
     }
     if (at("[data-save-idea]")) return saveIdea();
-    if ((el = at("[data-del-idea]"))) return confirmDeleteIdea(el.dataset.delIdea);
-    if ((el = at("[data-del-idea-ok]"))) { if (submit("deleteIdea", { idea: el.dataset.delIdeaOk })) { closeSheet(); toast("Идея удалена"); } return; }
     if (at("[data-nn]")) return openNowNext();
     if ((el = at("[data-bk]"))) return submit("setBooking", { what: el.dataset.bk, status: el.dataset.bkSt });
     if ((el = at("[data-gift]"))) return submit("setGift", { what: el.dataset.gift, to: el.dataset.giftTo, done: el.getAttribute("aria-pressed") !== "true" });
