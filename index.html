@@ -150,6 +150,7 @@
   .day-head .d { color: var(--slate); font-size: calc(15px * var(--fs)); flex: 1; }
   .day-head .sum { color: var(--slate); font: 600 calc(15px * var(--fs)) var(--cond); font-variant-numeric: tabular-nums; }
   .day-head .today { font: 600 calc(13px * var(--fs)) var(--body); color: var(--wine); }
+  .day-head .wx { font: 600 calc(14px * var(--fs)) var(--cond); color: var(--fir); background: var(--ice); border: 1px solid var(--frost); padding: 1px 8px; border-radius: 99px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .day-route { color: var(--slate); font-size: calc(15px * var(--fs)); margin: 1px 0 8px; }
   .tl { list-style: none; margin: 0; padding: 0; }
   .ev { width: 100%; border: 0; background: none; text-align: left; display: grid; grid-template-columns: 46px 28px 1fr; gap: 0 8px; padding: 0; min-height: 56px; }
@@ -176,6 +177,9 @@
   .pin { width: 30px; height: 30px; border-radius: 50%; background: var(--fir); color: #fff; border: 2px solid #fff; display: grid; place-items: center;
     font: 700 calc(14px * var(--fs)) var(--cond); box-shadow: 0 1px 4px rgba(0,0,0,.35); }
   .pin.today { background: var(--wine); color: var(--wine-ink); }
+  .pin.idea { background: var(--paper); color: var(--fir); border: 2px dashed var(--fir); }
+  .me-dot { width: 16px; height: 16px; border-radius: 50%; background: #1A73E8; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(26,115,232,.25), 0 1px 4px rgba(0,0,0,.4); }
+  .map-loc { position: absolute; right: 10px; bottom: 26px; z-index: 500; width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--edge); background: var(--paper); color: var(--ink); display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
   .leaflet-popup-content { font-family: var(--body); font-size: calc(14px * var(--fs)); margin: 12px 14px; }
   .leaflet-popup-content b { font-family: var(--cond); font-size: calc(16px * var(--fs)); }
   .leaflet-popup-content button { margin-top: 8px; border: 0; background: var(--wine); color: var(--wine-ink); border-radius: 8px; padding: 6px 10px; font: 600 calc(14px * var(--fs)) var(--body); }
@@ -299,7 +303,9 @@
   .nn-cur { padding: 12px 14px; border-radius: var(--r); background: var(--fir-soft); }
   .nn-cur .ttl { font: 700 calc(19px * var(--fs))/1.25 var(--cond); margin-top: 4px; }
   .walk { margin-top: 10px; font-size: calc(16px * var(--fs)); min-height: 1.4em; }
-  .leg { color: var(--slate); font-size: calc(15px * var(--fs)); padding: 6px 0 6px 58px; }
+  .leg { color: var(--slate); font-size: calc(14px * var(--fs)); padding: 4px 0 6px 82px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .leg .warn { color: var(--warn); background: var(--warn-soft); padding: 1px 8px; border-radius: 6px; font-weight: 500; }
+  .sunset-row { color: var(--plan); background: var(--plan-soft); font: 600 calc(13.5px * var(--fs)) var(--body); padding: 4px 10px; margin: 4px 0 6px 82px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
   .later { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--frost); border-radius: var(--r); background: var(--paper); overflow: hidden; }
   .later button { width: 100%; display: grid; grid-template-columns: 50px 1fr; gap: 8px; align-items: baseline; text-align: left; border: 0; border-top: 1px solid var(--frost); background: none; padding: 12px 14px; min-height: 52px; }
   .later li:first-child button { border-top: 0; }
@@ -398,8 +404,8 @@
       <button type="button" data-view="map">Карта</button>
     </div>
     <div class="strip" id="strip" aria-label="Дни поездки"></div>
+    <div class="filters" id="filters" aria-label="Фильтр событий"></div>
     <div id="route-list">
-      <div class="filters" id="filters" aria-label="Фильтр событий"></div>
       <div id="route"></div>
       <div class="row-acts" style="margin-top:22px"><button class="btn secondary small" type="button" data-ics-menu>Добавить в календарь</button></div>
     </div>
@@ -916,6 +922,107 @@
   function renderFilters() {
     $("filters").innerHTML = FILTERS.map(([v, l]) => '<button class="chip" type="button" data-f="' + v + '" aria-pressed="' + (state.filter === v) + '">' + l + "</button>").join("");
   }
+  // ================= погода и закат (Open-Meteo, без ключа) =================
+  const WX_KEY = "planner-wx-v1";
+  const wxCache = lsGet(WX_KEY) || {};
+  let wxBusy = false;
+  const wxIcon = (c) => c === 0 ? "☀️" : c <= 2 ? "⛅" : c === 3 ? "☁️" : c <= 48 ? "🌫" : c <= 67 ? "🌧" : c <= 77 ? "❄️" : c <= 82 ? "🌦" : c <= 86 ? "🌨" : "⛈";
+  const fmtTemp = (n) => (n > 0 ? "+" : "") + Math.round(n);
+
+  function dayCoords(d) {
+    const stay = d.list.find((r) => r._ll && ["жильё", "жилье", "отель"].includes(low(r["Тип"])));
+    const any = d.list.find((r) => r._ll);
+    return (stay || any || {})._ll || null;
+  }
+
+  function dayWeather(d) {
+    if (!d.date) return null;
+    const ll = dayCoords(d);
+    if (!ll) return null;
+    return wxCache[ll[0].toFixed(2) + "," + ll[1].toFixed(2) + "|" + toIso(d.date)] || null;
+  }
+
+  function dayWeatherBadge(d) {
+    const w = dayWeather(d);
+    if (!w || w.min == null) return "";
+    return '<span class="wx" title="' + esc(w.tip || "") + '">' + wxIcon(w.code) + " " + fmtTemp(w.min) + "…" + fmtTemp(w.max) + "°</span>";
+  }
+
+  function daySunsetMin(d) {
+    const w = dayWeather(d);
+    if (w && w.sunset) { const m = timeMin(w.sunset); if (m != null) return m; }
+    if (!d.date) return null;
+    const mo = d.date.getMonth() + 1;
+    // Для зимних месяцев в Альпах (ноябрь–январь) ориентир заката ~16:25
+    if (mo === 12 || mo === 1) return 16 * 60 + 25;
+    if (mo === 11 || mo === 2) return 17 * 60;
+    return null;
+  }
+
+  async function loadWeather() {
+    if (wxBusy || !MODEL || !MODEL.days.length || navigator.onLine === false) return;
+    const nowTs = Date.now(), today = new Date();
+    const todo = MODEL.days.filter((d) => {
+      if (!d.date || !dayCoords(d)) return false;
+      const diff = dayDiff(d.date, today);
+      if (diff < -1 || diff > 15) return false;
+      const ll = dayCoords(d), k = ll[0].toFixed(2) + "," + ll[1].toFixed(2) + "|" + toIso(d.date);
+      return !wxCache[k] || (nowTs - (wxCache[k].ts || 0) > 3 * 3600e3);
+    });
+    if (!todo.length) return;
+    wxBusy = true;
+    let updated = false;
+    for (const d of todo) {
+      const ll = dayCoords(d), iso = toIso(d.date), k = ll[0].toFixed(2) + "," + ll[1].toFixed(2) + "|" + iso;
+      try {
+        const url = "https://api.open-meteo.com/v1/forecast?latitude=" + ll[0] + "&longitude=" + ll[1] +
+          "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunset&timezone=Europe%2FVienna&start_date=" + iso + "&end_date=" + iso;
+        const j = await (await fetch(url)).json();
+        if (j && j.daily && j.daily.time && j.daily.time[0]) {
+          const p = j.daily.precipitation_probability_max ? j.daily.precipitation_probability_max[0] : null;
+          const sun = j.daily.sunset && j.daily.sunset[0] ? String(j.daily.sunset[0]).split("T")[1] : "";
+          wxCache[k] = {
+            code: j.daily.weathercode[0],
+            min: j.daily.temperature_2m_min[0],
+            max: j.daily.temperature_2m_max[0],
+            sunset: sun,
+            tip: [p != null ? "Осадки: " + p + "%" : "", sun ? "Закат: " + sun : ""].filter(Boolean).join(" · "),
+            ts: nowTs
+          };
+          updated = true;
+        }
+      } catch (e) { break; }
+    }
+    wxBusy = false;
+    if (updated) { lsSet(WX_KEY, wxCache); renderRoute(); }
+  }
+
+  function legRow(prev, cur) {
+    if (!prev || !cur) return "";
+    const parts = [], warns = [];
+    const skipMove = ["переезд", "жильё", "жилье", "отель"].includes(low(cur["Тип"])) || ["переезд"].includes(low(prev["Тип"]));
+    let trMin = 0;
+    if (prev._ll && cur._ll && !skipMove) {
+      const km = hav(prev._ll, cur._ll);
+      if (km >= 0.15 && km <= 25) {
+        trMin = km > 2.5 ? Math.round(km * 3 + 10) : walkMin(km);
+        parts.push((km > 2.5 ? "🚇 " : "🚶 ") + walkText(km));
+      } else if (km > 25 && prev._min != null && cur._min != null && low(prev["Статус"]) === "идея" && low(cur["Статус"]) === "идея") {
+        warns.push("альтернативы в разных местах (" + fmtKm(km) + ")");
+      }
+    }
+    if (prev._min != null && cur._min != null && !skipMove) {
+      const gap = cur._min - prev._min;
+      const dur = DUR[low(prev["Тип"])] || 60;
+      if (gap === 0) warns.push("одновременно (или / или)");
+      else if (gap > 0 && gap < 45 && dur >= 60) warns.push("пересечение по времени (разница " + fmtDuration(gap) + ")");
+      else if (gap > 0 && dur + trMin > gap + 15) warns.push("впритык: ~" + fmtDuration(dur) + " на место" + (trMin ? " + дорога" : ""));
+    }
+    if (!parts.length && !warns.length) return "";
+    return '<li class="leg">' + (parts.length ? "<span>" + esc(parts.join(" · ")) + "</span>" : "") +
+      warns.map((w) => '<span class="warn">⚠️ ' + esc(w) + "</span>").join("") + "</li>";
+  }
+
   function renderRoute() {
     const t = now(), curMin = t.getHours() * 60 + t.getMinutes();
     document.querySelectorAll("#route-view button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
@@ -928,22 +1035,34 @@
       (state.showPast ? "Скрыть прошедшие дни" : "Показать прошедшие дни (" + pastDays.length + ")") + "</button></div>";
     MODEL.days.forEach((d) => {
       if (!state.showPast && pastDays.includes(d)) return;
-      const list = d.list.filter(passFilter), costs = sumPlan(d.list), isToday = MODEL.todayDay === d;
+      const list = d.list.filter(passFilter), costs = sumPlan(list), isToday = MODEL.todayDay === d;
+      const activeCities = [];
+      list.forEach((x) => String(x["Город"] || "").split("→").map((c) => c.trim()).filter(Boolean).forEach((c) => { if (!activeCities.includes(c)) activeCities.push(c); }));
+      const routeCities = activeCities.length ? activeCities : d.cities;
+      const sunsetMin = daySunsetMin(d);
+      let sunsetShown = false;
       html += '<section class="day" id="day-' + esc(d.key) + '" data-key="' + esc(d.key) + '" aria-label="День ' + esc(d.n || d.key) + '">' +
         '<div class="day-head"><span class="t">День ' + esc(d.n || d.key) + "</span>" + '<span class="d">' + esc(d.date ? fmtLong(d.date) : "") + "</span>" +
-        (isToday ? '<span class="today">сегодня</span>' : "") + (costs ? '<span class="sum">' + esc(money(costs)) + "</span>" : "") + "</div>" +
-        '<div class="day-route">' + esc(d.cities.join(" → ")) + "</div>" +
+        (isToday ? '<span class="today">сегодня</span>' : "") + dayWeatherBadge(d) + (costs ? '<span class="sum">' + esc(money(costs)) + "</span>" : "") + "</div>" +
+        '<div class="day-route">' + esc(routeCities.join(" → ")) + "</div>" +
         (d.list.filter(isMovable).length >= 2 && !(MODEL.todayDay && d.date && dayDiff(d.date, t) < 0) ? '<div class="day-tools"><button class="btn ghost small" type="button" data-opt="' + esc(d.key) + '">' + icon("order") + "Удобный порядок</button></div>" : "");
       if (!list.length) html += '<p class="hint">Нет событий по выбранному фильтру.</p>';
-      else html += '<ol class="tl">' + list.map((r) => {
+      else html += '<ol class="tl">' + list.map((r, idx) => {
         const past = d.date && (dayDiff(d.date, t) < 0 || (isToday && r._min != null && r._min < curMin - 60));
-        return "<li>" + evRow(r, past, r === nextItem) + "</li>";
+        const prev = idx > 0 ? list[idx - 1] : null;
+        let pre = prev ? legRow(prev, r) : "";
+        if (!sunsetShown && sunsetMin != null && r._min != null && r._min >= sunsetMin && (!prev || prev._min == null || prev._min < sunsetMin)) {
+          sunsetShown = true;
+          pre += '<li><div class="sunset-row">🌅 Темнеет около ' + esc(hhmm(sunsetMin)) + "</div></li>";
+        }
+        return pre + "<li>" + evRow(r, past, r === nextItem) + "</li>";
       }).join("") + "</ol>";
       html += "</section>";
     });
     $("route").innerHTML = html;
     observeDays();
     if (state.view === "map") showMap();
+    loadWeather();
   }
   function evRow(r, past, isNext) {
     const st = r["Статус"], stl = low(st), cost = num(r["Стоимость"]); let hi;
@@ -1003,6 +1122,7 @@
     }
     geoBusy = false; if (miss.length && state.view === "map") drawMap();
   }
+  let ME_MARK = null;
   async function showMap() {
     try { await loadLeaflet(); } catch (e) { $("map-note").textContent = "Карта не загрузилась. Проверьте подключение."; return; }
     if (!LMAP) {
@@ -1014,6 +1134,21 @@
         ? L.tileLayer("https://basemaps.cartocdn.com/rastertiles/" + (dark ? "dark_all" : "light_all") + "/{z}/{x}/{y}{r}.png?key=" + encodeURIComponent(key), { maxZoom: 19, attribution: "&copy; OpenStreetMap, &copy; CARTO" })
         : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; участники OpenStreetMap" });
       tiles.addTo(LMAP);
+      if (navigator.geolocation) {
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "map-loc"; btn.title = "Где я"; btn.setAttribute("aria-label", "Показать моё местоположение");
+        btn.innerHTML = icon("nav");
+        btn.onclick = (ev) => {
+          ev.stopPropagation();
+          navigator.geolocation.getCurrentPosition((pos) => {
+            const ll = [pos.coords.latitude, pos.coords.longitude];
+            if (ME_MARK) ME_MARK.setLatLng(ll);
+            else ME_MARK = L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), title: "Вы здесь" }).addTo(LMAP);
+            LMAP.setView(ll, Math.max(LMAP.getZoom(), 14));
+          }, () => toast("Геопозиция недоступна"), { enableHighAccuracy: true, timeout: 10000 });
+        };
+        $("map").appendChild(btn);
+      }
     }
     setTimeout(() => { LMAP.invalidateSize(); drawMap(); }, 30);
     geocodeMissing();
@@ -1022,27 +1157,57 @@
     if (!LMAP) return;
     if (LLAYER) LLAYER.remove();
     LLAYER = L.layerGroup().addTo(LMAP);
+    const singleDay = state.mapDay !== "all";
     const pts = [], seen = {}, noCoords = [];
+    let step = 0;
+
     MODEL.days.forEach((d) => {
-      if (state.mapDay !== "all" && d.key !== state.mapDay) return;
-      d.list.forEach((r) => {
+      if (singleDay && d.key !== state.mapDay) return;
+      const dayPts = [];
+      d.list.filter(passFilter).forEach((r) => {
         const ll = r._ll || geoCache[mapsQuery(r)];
         if (!ll) { noCoords.push(r); return; }
-        const k = ll.join(","); pts.push(ll);
+        const k = ll.join(",");
+        pts.push(ll); dayPts.push(ll);
         if (seen[k]) { seen[k].items.push(r); return; }
-        seen[k] = { ll, items: [r], day: d };
+        step++;
+        seen[k] = { ll, items: [r], day: d, label: singleDay ? step : (d.n || "") };
       });
+      if (dayPts.length > 1) {
+        L.polyline(dayPts, {
+          color: MODEL.todayDay === d ? "#8C2338" : "#173A33",
+          weight: singleDay ? 3 : 2,
+          opacity: singleDay ? 0.75 : 0.45,
+          dashArray: singleDay ? null : "4 6"
+        }).addTo(LLAYER);
+      }
     });
+
     Object.values(seen).forEach((p) => {
       const isToday = MODEL.todayDay === p.day;
-      const m = L.marker(p.ll, { icon: L.divIcon({ className: "", html: '<div class="pin' + (isToday ? " today" : "") + '">' + esc(p.day.n || "") + "</div>", iconSize: [30, 30], iconAnchor: [15, 15] }), keyboard: true, title: p.items[0]["Что"] });
-      m.bindPopup(p.items.map((r) => "<b>" + esc(r["Что"]) + "</b><br>" + esc(["День " + (p.day.n || p.day.key), r["Время"]].filter(Boolean).join(", ")) +
-        '<br><button type="button" data-open="' + r._i + '">Подробнее</button>').join("<hr>"));
+      const allIdeas = p.items.every((r) => low(r["Статус"]) === "идея");
+      const cls = "pin" + (isToday ? " today" : "") + (allIdeas ? " idea" : "");
+      const m = L.marker(p.ll, {
+        icon: L.divIcon({ className: "", html: '<div class="' + cls + '">' + esc(p.label) + "</div>", iconSize: [30, 30], iconAnchor: [15, 15] }),
+        keyboard: true,
+        title: p.items[0]["Что"]
+      });
+      m.bindPopup(p.items.map((r) => {
+        const nav = dirUrl(r);
+        return "<b>" + esc(r["Что"]) + "</b><br>" +
+          esc([singleDay ? "" : "День " + (p.day.n || p.day.key), r["Время"], r["Статус"]].filter(Boolean).join(" · ")) +
+          '<div style="display:flex;gap:6px;margin-top:6px">' +
+          '<button type="button" data-open="' + r._i + '">Подробнее</button>' +
+          (nav ? '<a href="' + esc(nav) + '" target="_blank" rel="noopener" style="padding:6px 10px;border-radius:8px;border:1px solid #7D8E95;color:#12201D;text-decoration:none;font:600 13px var(--body)">Маршрут ↗</a>' : "") +
+          "</div>";
+      }).join("<hr>"));
       m.addTo(LLAYER);
     });
-    if (pts.length > 1) L.polyline(pts, { color: getComputedStyle(document.documentElement).getPropertyValue("--fir").trim() || "#173A33", weight: 2, opacity: .55, dashArray: "4 6" }).addTo(LLAYER);
-    if (pts.length) LMAP.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 15 }); else LMAP.setView([47.8, 13.5], 6);
-    $("map-note").textContent = (noCoords.length ? "Без координат: " + noCoords.length + ". " : "") + "Номер на метке — день поездки.";
+
+    if (pts.length) LMAP.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 15 });
+    else LMAP.setView([47.8, 13.5], 6);
+    $("map-note").textContent = (noCoords.length ? "Без координат: " + noCoords.length + ". " : "") +
+      (singleDay ? "Номер на метке — порядок точек за день. Пунктирная рамка — статус «Идея»." : "Номер на метке — день поездки. Выберите день выше, чтобы увидеть порядок точек.");
   }
 
   // ================= карточка события =================
@@ -1433,6 +1598,7 @@
   ];
   const ALL_PHRASES = []; PHRASES.forEach(([, list]) => list.forEach((p) => ALL_PHRASES.push(p)));
   const canSpeak = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+  if (canSpeak && "onvoiceschanged" in speechSynthesis) speechSynthesis.addEventListener("voiceschanged", () => speechSynthesis.getVoices(), { once: true });
   function speak(i) {
     const p = ALL_PHRASES[+i]; if (!p || !canSpeak) return;
     const u = new SpeechSynthesisUtterance(p[0].replace(/…/g, "")); u.lang = "de-DE"; u.rate = 0.85;
